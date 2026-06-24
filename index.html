@@ -257,15 +257,18 @@ body {
   will-change: width;
 }
 
-/* Desktop mini rail: icons only */
+/* Desktop: collapsed = sidebar totalmente oculto (some da tela) */
 .sidebar.collapsed {
-  width: var(--sidebar-mini);
+  width: var(--sidebar-w);
+  transform: translateX(calc(-1 * var(--sidebar-w)));
+  box-shadow: none;
 }
 
-/* Hover expands sidebar back */
+/* Hover NÃO reabre mais o menu — só o clique nos traços controla */
 .sidebar.collapsed:hover {
   width: var(--sidebar-w);
-  box-shadow: 6px 0 28px rgba(0,0,0,0.25);
+  transform: translateX(calc(-1 * var(--sidebar-w)));
+  box-shadow: none;
 }
 
 /* When hovered sidebar is expanded, push main via JS or keep it static */
@@ -283,7 +286,7 @@ body {
 }
 
 .main.sidebar-collapsed {
-  margin-left: var(--sidebar-mini);
+  margin-left: 0;
 }
 
 /* ── Nav items: icon always visible, text fades ── */
@@ -931,6 +934,7 @@ tbody tr:last-child td { border-bottom: none; }
 .badge-active { background: rgba(99,102,241,0.15); color: var(--primary-light); }
 .badge-done { background: rgba(16,185,129,0.15); color: #34d399; }
 .badge-cancelled { background: rgba(239,68,68,0.15); color: #f87171; }
+.badge-deploy { background: rgba(14,165,233,0.15); color: #38bdf8; }
 .badge-income { background: var(--success-dim); color: #34d399; }
 .badge-expense { background: var(--danger-dim); color: #f87171; }
 
@@ -2499,6 +2503,7 @@ tbody tr:last-child td { border-bottom: none; }
               <option value="">Todos os status</option>
               <option value="planejamento">Planejamento</option>
               <option value="andamento">Em Andamento</option>
+              <option value="implantacao">Implantação</option>
               <option value="concluido">Concluído</option>
               <option value="cancelado">Cancelado</option>
             </select>
@@ -3019,6 +3024,7 @@ tbody tr:last-child td { border-bottom: none; }
         <select id="proj-status">
           <option value="planejamento">Planejamento</option>
           <option value="andamento">Em Andamento</option>
+          <option value="implantacao">Implantação</option>
           <option value="concluido">Concluído</option>
           <option value="cancelado">Cancelado</option>
         </select>
@@ -3246,6 +3252,16 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="form-group full">
         <label>Descrição</label>
         <textarea id="produto-desc" placeholder="Descreva o produto..."></textarea>
+      </div>
+      <div class="form-group full">
+        <label><i class="ph ph-rocket-launch" style="color:var(--primary-light);"></i> Melhorias a implementar</label>
+        <textarea id="produto-melhorias" placeholder="Liste melhorias futuras, ajustes pendentes ou próximos passos deste produto..."></textarea>
+        <span style="font-size:11px;color:var(--text-muted);margin-top:4px;">Use uma melhoria por linha para acompanhar o que ainda falta evoluir.</span>
+      </div>
+      <div class="form-group full">
+        <label>Anexar Arquivo HTML</label>
+        <input type="file" id="produto-arquivo-html" accept=".html" onchange="previewProdutoHTML(this)">
+        <div id="produto-arquivo-preview" style="margin-top:10px;font-size:12px;color:var(--text-muted);"></div>
       </div>
       <div class="form-footer">
         <button type="button" class="btn btn-secondary" onclick="closeModal('produto')">Cancelar</button>
@@ -3811,8 +3827,15 @@ function toggleSidebar() {
     // Mobile: drawer behavior only
     document.getElementById('sidebar').classList.toggle('open');
     document.getElementById('sidebar-overlay').classList.toggle('open');
+    return;
   }
-  // Desktop: sidebar is controlled by hover only — no click action
+  // Desktop: traços ocultam/mostram o menu lateral
+  const sidebar = document.getElementById('sidebar');
+  const main = document.querySelector('.main');
+  const hidden = sidebar.classList.toggle('collapsed');
+  main.classList.toggle('sidebar-collapsed', hidden);
+  main.style.marginLeft = '';
+  localStorage.setItem('gestorpro_sidebar_hidden', hidden ? '1' : '0');
 }
 
 function closeSidebar() {
@@ -3844,6 +3867,13 @@ function openModal(type) {
     document.getElementById('modal-project-title').textContent = 'Novo Projeto';
   }
   if (type === 'financial') { populateProjDropdown('fin-projeto', ''); }
+  if (type === 'produto' && !document.getElementById('produto-id').value) {
+    window.produtoArquivoHTML = null;
+    const fileEl = document.getElementById('produto-arquivo-html');
+    if (fileEl) fileEl.value = '';
+    updateProdutoHTMLPreview();
+    document.getElementById('modal-produto-title').textContent = 'Novo Produto';
+  }
   if (type === 'ideia' && !document.getElementById('ideia-id').value) {
     document.getElementById('modal-ideia-title').textContent = 'Nova Ideia';
   }
@@ -3965,6 +3995,7 @@ function deleteClient(id) {
 const statusBadge = {
   planejamento: '<span class="badge badge-planning">Planejamento</span>',
   andamento: '<span class="badge badge-active">Em Andamento</span>',
+  implantacao: '<span class="badge badge-deploy">Implantação</span>',
   concluido: '<span class="badge badge-done">Concluído</span>',
   cancelado: '<span class="badge badge-cancelled">Cancelado</span>',
 };
@@ -4030,6 +4061,7 @@ function renderProjetos(filterStatus = '') {
       <td style="font-family:var(--font-mono);font-size:13px;">${fmt(p.valor)}</td>
       <td>
         <div class="table-actions">
+          ${p.status === 'implantacao' ? `<button class="act-btn" onclick="enviarProjetoParaProduto('${p.id}')" title="Enviar para Produtos" style="color:#38bdf8;"><i class="ph ph-paper-plane-tilt"></i></button>` : ''}
           <button class="act-btn act-edit" onclick="editProject('${p.id}')"><i class="ph ph-pencil-simple"></i></button>
           <button class="act-btn act-delete" onclick="deleteProject('${p.id}')"><i class="ph ph-trash"></i></button>
         </div>
@@ -4071,6 +4103,39 @@ function deleteProject(id) {
 }
 
 function filterProjectsByStatus(s) { renderProjetos(s); }
+
+// Envia um projeto (em Implantação) para Produtos e o remove dos Projetos
+function enviarProjetoParaProduto(id) {
+  const p = state.projetos.find(proj => proj.id === id);
+  if (!p) return;
+  if (p.status !== 'implantacao') {
+    toast('Só é possível enviar projetos no status Implantação.', 'error');
+    return;
+  }
+  if (!confirm(`Enviar "${p.nome}" para Produtos? O projeto será removido da lista de Projetos.`)) return;
+
+  // Cria o produto a partir dos dados do projeto
+  const novoProduto = {
+    id: uid(),
+    nome: p.nome,
+    versao: '',
+    preco: p.valor || 0,
+    link: p.link || '',
+    desc: p.desc || '',
+    melhorias: p.melhorias || '',
+    arquivoHTML: p.arquivoHTML || null,
+  };
+  state.produtos.push(novoProduto);
+
+  // Remove o projeto (mantém o histórico financeiro vinculado)
+  state.projetos = state.projetos.filter(proj => proj.id !== id);
+
+  saveState();
+  renderProjetos();
+  renderProdutos();
+  toast('Projeto enviado para Produtos!');
+  showPage('produtos');
+}
 
 // ─── Ideias ───────────────────────────────────────────────
 const ideiaNivelLabel = { baixa:'Demanda baixa', media:'Demanda média', alta:'Demanda alta', validada:'Demanda validada' };
@@ -4371,15 +4436,15 @@ function renderDashboard() {
 
   // Doughnut
   const ctx = document.getElementById('doughnut-chart');
-  const counts = ['planejamento','andamento','concluido','cancelado'].map(s => state.projetos.filter(p => p.status === s).length);
+  const counts = ['planejamento','andamento','implantacao','concluido','cancelado'].map(s => state.projetos.filter(p => p.status === s).length);
   if (doughnutChart) doughnutChart.destroy();
   doughnutChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Planejamento', 'Em Andamento', 'Concluído', 'Cancelado'],
+      labels: ['Planejamento', 'Em Andamento', 'Implantação', 'Concluído', 'Cancelado'],
       datasets: [{
         data: counts,
-        backgroundColor: ['rgba(245,158,11,0.8)', 'rgba(99,102,241,0.8)', 'rgba(16,185,129,0.8)', 'rgba(239,68,68,0.8)'],
+        backgroundColor: ['rgba(245,158,11,0.8)', 'rgba(99,102,241,0.8)', 'rgba(14,165,233,0.8)', 'rgba(16,185,129,0.8)', 'rgba(239,68,68,0.8)'],
         borderColor: '#12151f',
         borderWidth: 3,
         hoverOffset: 6,
@@ -5404,6 +5469,39 @@ function viewProjectHTML(projectId) {
   openHtmlViewer(html, p.nome ? `${p.nome}.html` : 'projeto.html');
 }
 
+// ─── Anexo HTML em Produtos ───────────────────────────────
+function previewProdutoHTML(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    window.produtoArquivoHTML = ev.target.result;
+    updateProdutoHTMLPreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+function updateProdutoHTMLPreview() {
+  const preview = document.getElementById('produto-arquivo-preview');
+  if (!preview) return;
+  if (window.produtoArquivoHTML) {
+    preview.innerHTML = '<i class="ph ph-check-circle" style="color:var(--success);"></i> Arquivo HTML anexado';
+  } else {
+    preview.innerHTML = '';
+  }
+}
+
+function viewProdutoHTML(produtoId) {
+  const p = state.produtos.find(prod => prod.id === produtoId);
+  if (!p || !p.arquivoHTML) {
+    toast('Arquivo HTML não encontrado.', 'error');
+    return;
+  }
+  const html = storedToHTML(p.arquivoHTML);
+  if (!html) { toast('Não foi possível ler o arquivo HTML.', 'error'); return; }
+  openHtmlViewer(html, p.nome ? `${p.nome}.html` : 'produto.html');
+}
+
 // ─── Dropdowns ────────────────────────────────────────────
 function populateClientDropdown(id) {
   const sel = document.getElementById(id);
@@ -5549,6 +5647,8 @@ function saveProduto(e) {
     preco: parseFloat(document.getElementById('produto-preco').value) || 0,
     link: document.getElementById('produto-link').value.trim(),
     desc: document.getElementById('produto-desc').value,
+    melhorias: document.getElementById('produto-melhorias').value,
+    arquivoHTML: window.produtoArquivoHTML || null,
   };
   if (id) {
     const i = state.produtos.findIndex(p => p.id === id);
@@ -5571,6 +5671,10 @@ function editProduto(id) {
   document.getElementById('produto-preco').value = p.preco || '';
   document.getElementById('produto-link').value = p.link || '';
   document.getElementById('produto-desc').value = p.desc || '';
+  document.getElementById('produto-melhorias').value = p.melhorias || '';
+  window.produtoArquivoHTML = p.arquivoHTML || null;
+  document.getElementById('produto-arquivo-html').value = '';
+  updateProdutoHTMLPreview();
   document.getElementById('modal-produto-title').textContent = 'Editar Produto';
   openModal('produto');
 }
@@ -5610,7 +5714,10 @@ function renderProdutos() {
       ? `<a href="${p.link}" target="_blank" style="color:var(--primary-light);display:inline-flex;align-items:center;gap:4px;font-size:12px;text-decoration:none;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.link}"><i class="ph ph-link"></i> ${p.link.replace(/^https?:\/\//, '')}</a>`
       : '<span style="color:var(--text-muted);font-size:12px;">—</span>';
     return `<tr>
-      <td><strong>${p.nome}</strong></td>
+      <td>
+        <strong>${p.nome}</strong>
+        ${p.arquivoHTML ? `<button class="act-btn" onclick="viewProdutoHTML('${p.id}')" style="background:none;border:none;color:var(--primary-light);cursor:pointer;font-size:12px;margin-left:6px;padding:0;" title="Visualizar HTML"><i class="ph ph-file-html"></i></button>` : ''}
+      </td>
       <td>${p.versao ? `<span class="badge badge-active">${p.versao}</span>` : '—'}</td>
       <td>${fmt(p.preco)}</td>
       <td><span style="font-weight:600;color:var(--primary-light);">${licCount}</span></td>
@@ -6052,8 +6159,8 @@ function abrirHistoricoCliente(clienteId) {
       <i class="ph ph-kanban" style="font-size:28px;display:block;margin-bottom:6px;opacity:.4;"></i>Nenhum projeto vinculado.
     </div>`;
   } else {
-    const statusColors = { planejamento: 'var(--warning)', andamento: 'var(--primary-light)', concluido: 'var(--success)', cancelado: 'var(--danger)' };
-    const statusLabels = { planejamento: 'Planejamento', andamento: 'Em Andamento', concluido: 'Concluído', cancelado: 'Cancelado' };
+    const statusColors = { planejamento: 'var(--warning)', andamento: 'var(--primary-light)', implantacao: '#38bdf8', concluido: 'var(--success)', cancelado: 'var(--danger)' };
+    const statusLabels = { planejamento: 'Planejamento', andamento: 'Em Andamento', implantacao: 'Implantação', concluido: 'Concluído', cancelado: 'Cancelado' };
     projEl.innerHTML = projetos.map(p => `
       <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px;background:var(--bg-input);display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
         <div style="width:40px;height:40px;background:var(--success-dim);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -6615,25 +6722,15 @@ async function init() {
   // Restore saved theme
   const savedTheme = localStorage.getItem('gestorpro_theme');
   applyTheme(savedTheme === 'light');
-  // Desktop: sidebar always starts collapsed (expands on hover only)
+  // Desktop: menu lateral começa visível e só é ocultado pelos traços
   if (!isMobile()) {
-    document.getElementById('sidebar').classList.add('collapsed');
-    document.querySelector('.main').classList.add('sidebar-collapsed');
-
-    // Expand main margin on sidebar hover for smooth layout
     const sidebar = document.getElementById('sidebar');
     const main = document.querySelector('.main');
-    sidebar.addEventListener('mouseenter', () => {
-      if (!isMobile() && sidebar.classList.contains('collapsed')) {
-        main.style.marginLeft = 'var(--sidebar-w)';
-        main.style.transition = 'margin-left 0.24s cubic-bezier(0.4,0,0.2,1)';
-      }
-    });
-    sidebar.addEventListener('mouseleave', () => {
-      if (!isMobile() && sidebar.classList.contains('collapsed')) {
-        main.style.marginLeft = 'var(--sidebar-mini)';
-      }
-    });
+    // Restaura o último estado escolhido pelo usuário (oculto ou visível)
+    if (localStorage.getItem('gestorpro_sidebar_hidden') === '1') {
+      sidebar.classList.add('collapsed');
+      main.classList.add('sidebar-collapsed');
+    }
   }
   updateDate();
   setInterval(updateDate, 60000);
