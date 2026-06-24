@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2514,7 +2513,7 @@ tbody tr:last-child td { border-bottom: none; }
             <div class="section-title">Projetos</div>
             <div class="section-sub">Acompanhe o andamento dos seus projetos</div>
           </div>
-          <button class="btn btn-primary" onclick="openModal('project')">
+          <button class="btn btn-primary" onclick="document.getElementById('project-id').value=''; openModal('project')">
             <i class="ph ph-plus"></i> Novo Projeto
           </button>
         </div>
@@ -3805,7 +3804,7 @@ const pageTitles = {
 // Pages that have an "add" action for FAB
 const fabPages = {
   clientes: () => openModal('client'),
-  projetos: () => openModal('project'),
+  projetos: () => { document.getElementById('project-id').value=''; openModal('project'); },
   financeiro: () => openModal('financial'),
   ideias: () => openModal('ideia'),
 };
@@ -3886,12 +3885,11 @@ function filterProjects(status) {
 // ─── Modals ───────────────────────────────────────────────
 function openModal(type) {
   document.getElementById('modal-' + type).classList.add('open');
-  if (type === 'project') {
+  if (type === 'project' && !document.getElementById('project-id').value) {
     populateClientDropdown('proj-cliente');
     window.projArquivoHTML = null;
     document.getElementById('proj-arquivo-html').value = '';
     updateProjectHTMLPreview();
-    document.getElementById('project-id').value = '';
     document.getElementById('modal-project-title').textContent = 'Novo Projeto';
   }
   if (type === 'financial') { populateProjDropdown('fin-projeto', ''); }
@@ -4291,6 +4289,7 @@ function deleteIdeia(id) {
 function converterIdeiaEmProjeto(id) {
   const i = state.ideias.find(x => x.id === id);
   if (!i) return;
+  document.getElementById('project-id').value = '';
   openModal('project');
   setTimeout(() => {
     document.getElementById('proj-nome').value = i.titulo || '';
