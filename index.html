@@ -47,27 +47,33 @@ window.FIREBASE_CONFIG = {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root {
-  --bg: #0a0c15;
-  --bg-card: #141723;
-  --bg-sidebar: #0d0f1a;
-  --bg-input: #191d2c;
-  --bg-hover: #1f2438;
-  --border: rgba(255,255,255,0.07);
-  --border-active: rgba(99,102,241,0.5);
-  --primary: #6366f1;
-  --primary-light: #818cf8;
-  --primary-dim: rgba(99,102,241,0.12);
+  --bg: #0f172a;
+  --bg-card: #1e293b;
+  --bg-sidebar: #1e293b;
+  --bg-input: #0f172a;
+  --bg-hover: #334155;
+  --border: rgba(148,163,184,0.15);
+  --border-light: rgba(148,163,184,0.25);
+  --border-active: rgba(30,64,175,0.5);
+  --primary: #1e40af;
+  --primary-light: #3b82f6;
+  --primary-dim: rgba(30,64,175,0.12);
+  --secondary: #0891b2;
+  --secondary-light: #06b6d4;
+  --accent: #ea580c;
+  --accent-light: #f97316;
   --violet: #8b5cf6;
   --violet-light: #a78bfa;
-  --brand-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  --success: #10b981;
-  --success-dim: rgba(16,185,129,0.12);
-  --danger: #f43f5e;
-  --danger-dim: rgba(244,63,94,0.12);
-  --warning: #f59e0b;
-  --warning-dim: rgba(245,158,11,0.12);
-  --text: #e3e6f1;
-  --text-muted: #757d91;
+  --brand-gradient: linear-gradient(135deg, #1e40af 0%, #0891b2 100%);
+  --success: #059669;
+  --success-dim: rgba(5,150,105,0.12);
+  --danger: #dc2626;
+  --danger-dim: rgba(220,38,38,0.12);
+  --warning: #d97706;
+  --warning-dim: rgba(217,119,6,0.12);
+  --text: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
   --text-faint: #374151;
   --radius: 12px;
   --radius-sm: 8px;
@@ -75,7 +81,7 @@ window.FIREBASE_CONFIG = {
   --font: 'Plus Jakarta Sans', sans-serif;
   --font-mono: 'DM Mono', monospace;
   --shadow: 0 4px 24px rgba(0,0,0,0.4);
-  --shadow-glow: 0 0 24px rgba(99,102,241,0.2);
+  --shadow-glow: 0 0 24px rgba(30,64,175,0.2);
 }
 
 /* ─── LIGHT THEME ────────────────────────────── */
@@ -127,6 +133,47 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  background-attachment: fixed;
+  position: relative;
+}
+
+/* ─── BACKGROUND IMAGE COM OVERLAY ─── */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  opacity: 0.08;
+  z-index: 0;
+  pointer-events: none;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, 
+    rgba(15,23,42,0.95) 0%, 
+    rgba(30,41,59,0.92) 50%,
+    rgba(15,23,42,0.95) 100%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+body.light::after {
+  background: linear-gradient(135deg, 
+    rgba(248,250,252,0.98) 0%, 
+    rgba(241,245,249,0.95) 50%,
+    rgba(248,250,252,0.98) 100%);
 }
 
 /* ─── SCROLLBAR ─────────────────────────────── */
@@ -2185,6 +2232,537 @@ tbody tr:last-child td { border-bottom: none; }
 @media (max-width: 768px) {
   .topbar .sync-pill span.sync-label { display: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   AGENDA / CALENDARIO
+   ═══════════════════════════════════════════════════════════ */
+
+.agenda-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  height: 100%;
+}
+
+.calendar-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.calendar-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.calendar-day-header {
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 8px;
+  font-size: 12px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  font-size: 13px;
+  gap: 4px;
+  user-select: none;
+}
+
+.calendar-day:hover {
+  background: var(--bg-hover);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.calendar-day.today {
+  background: rgba(30,64,175,0.15);
+  border-color: var(--primary);
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.calendar-day.selected {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.calendar-day.has-events::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--accent);
+  border-radius: 50%;
+  bottom: 4px;
+}
+
+.agenda-events {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.event-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.event-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(30,64,175,0.2);
+  border-color: var(--primary);
+}
+
+.event-item.project {
+  border-left-color: var(--accent);
+}
+
+.event-item.project:hover {
+  box-shadow: 0 4px 12px rgba(234,88,12,0.2);
+  border-color: var(--accent);
+}
+
+.event-item.commitment {
+  border-left-color: var(--secondary);
+}
+
+.event-item.commitment:hover {
+  box-shadow: 0 4px 12px rgba(8,145,178,0.2);
+  border-color: var(--secondary);
+}
+
+.event-item.task {
+  border-left-color: var(--success);
+}
+
+.event-item.task:hover {
+  box-shadow: 0 4px 12px rgba(5,150,105,0.2);
+  border-color: var(--success);
+}
+
+.event-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 6px;
+}
+
+.event-item-title {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.event-item-time {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.event-item-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(30,64,175,0.2);
+  color: var(--primary);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.event-item.project .event-item-badge {
+  background: rgba(234,88,12,0.2);
+  color: var(--accent);
+}
+
+.event-item.commitment .event-item-badge {
+  background: rgba(8,145,178,0.2);
+  color: var(--secondary);
+}
+
+.event-item.task .event-item-badge {
+  background: rgba(5,150,105,0.2);
+  color: var(--success);
+}
+
+.event-item-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* ─── MODAL AGENDA ─── */
+.modal-agenda {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-agenda.active {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-agenda-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-agenda-header {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--text);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  color: var(--text);
+}
+
+.agenda-form-group {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.agenda-form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+}
+
+.agenda-form-group input,
+.agenda-form-group textarea,
+.agenda-form-group select {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.agenda-form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.agenda-form-group input:focus,
+.agenda-form-group textarea:focus,
+.agenda-form-group select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(30,64,175,0.1);
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* ─── BACKGROUND SETTINGS ─── */
+.bg-settings-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.bg-settings-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.bg-settings-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.bg-upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bg-upload-zone:hover {
+  border-color: var(--primary);
+  background: rgba(30,64,175,0.05);
+}
+
+.bg-upload-zone.active {
+  border-color: var(--primary);
+  background: rgba(30,64,175,0.1);
+}
+
+.bg-upload-zone i {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+}
+
+.bg-upload-zone p {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.bg-upload-zone small {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: block;
+}
+
+#bgInput {
+  display: none;
+}
+
+.bg-transparency-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.bg-transparency-control label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 140px;
+}
+
+.bg-transparency-control input[type="range"] {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--bg-input);
+  border-radius: 3px;
+  outline: none;
+}
+
+.bg-transparency-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(30,64,175,0.3);
+}
+
+.bg-transparency-control input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(30,64,175,0.3);
+}
+
+.transparency-value {
+  min-width: 40px;
+  text-align: right;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.bg-preview {
+  width: 100%;
+  height: 150px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-preview::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(15,23,42,0.8);
+  pointer-events: none;
+}
+
+.color-swatch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+
+.color-swatch-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+}
+
+.color-swatch-info {
+  flex: 1;
+}
+
+.color-swatch-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.color-swatch-value {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.btn-clear-bg {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--danger-dim);
+  color: var(--danger);
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btn-clear-bg:hover {
+  background: var(--danger-dim);
+  border-color: var(--danger);
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 1024px) {
+  .agenda-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .bg-settings-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .agenda-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-agenda-box {
+    width: 95%;
+    padding: 16px;
+  }
+  
+  .calendar-grid {
+    gap: 4px;
+    padding: 12px;
+  }
+  
+  .calendar-day {
+    font-size: 11px;
+  }
+  
+  .bg-settings-container {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
 </head>
 <body>
@@ -2295,6 +2873,9 @@ tbody tr:last-child td { border-bottom: none; }
       <button class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
         <i class="ph ph-squares-four"></i><span>Painel Geral</span>
       </button>
+      <button class="nav-item" data-page="agenda" onclick="showPage('agenda')">
+        <i class="ph ph-calendar"></i><span>Agenda</span>
+      </button>
 
       <div class="nav-section" style="margin-top:14px;">Gestão</div>
       <button class="nav-item" data-page="clientes" onclick="showPage('clientes')">
@@ -2329,6 +2910,9 @@ tbody tr:last-child td { border-bottom: none; }
       </button>
 
       <div class="nav-section" style="margin-top:14px;">Sistema</div>
+      <button class="nav-item" data-page="personalizacao" onclick="showPage('personalizacao')">
+        <i class="ph ph-image"></i><span>Temas & Fundo</span>
+      </button>
       <button class="nav-item" data-page="configuracoes" onclick="showPage('configuracoes')">
         <i class="ph ph-gear-six"></i><span>Configurações</span>
       </button>
@@ -2980,6 +3564,142 @@ tbody tr:last-child td { border-bottom: none; }
         </div>
       </section>
 
+      <!-- PÁGINA: AGENDA -->
+      <section id="page-agenda" class="page">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Agenda</div>
+            <div class="section-sub">Gerencie seus compromissos, tarefas e projetos com datas</div>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button class="btn btn-primary" onclick="openAgendaModal('commitment')">
+              <i class="ph ph-calendar-plus"></i> Compromisso
+            </button>
+            <button class="btn btn-accent" onclick="openAgendaModal('task')">
+              <i class="ph ph-check-circle"></i> Tarefa
+            </button>
+          </div>
+        </div>
+
+        <div class="agenda-container">
+          <!-- CALENDAR -->
+          <div class="calendar-panel">
+            <div class="calendar-header">
+              <button class="btn btn-ghost" onclick="previousMonth()" style="padding: 6px 12px;">
+                <i class="ph ph-caret-left"></i>
+              </button>
+              <h3 id="calendar-title">Dezembro 2024</h3>
+              <button class="btn btn-ghost" onclick="nextMonth()" style="padding: 6px 12px;">
+                <i class="ph ph-caret-right"></i>
+              </button>
+            </div>
+
+            <div class="calendar-grid">
+              <div class="calendar-day-header">Dom</div>
+              <div class="calendar-day-header">Seg</div>
+              <div class="calendar-day-header">Ter</div>
+              <div class="calendar-day-header">Qua</div>
+              <div class="calendar-day-header">Qui</div>
+              <div class="calendar-day-header">Sex</div>
+              <div class="calendar-day-header">Sab</div>
+              <div id="calendar-days"></div>
+            </div>
+          </div>
+
+          <!-- EVENTS -->
+          <div class="card">
+            <h3 style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">
+              Eventos do Dia
+              <span style="font-size: 13px; color: var(--text-muted);" id="events-date"></span>
+            </h3>
+            <div class="agenda-events" id="events-list">
+              <div style="text-align: center; color: var(--text-muted); padding: 32px 16px;">
+                <i class="ph ph-calendar-blank" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 12px;"></i>
+                <p>Nenhum evento neste dia</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PÁGINA: PERSONALIZAÇÃO -->
+      <section id="page-personalizacao" class="page">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Temas & Fundo</div>
+            <div class="section-sub">Personalize a aparência do sistema com cores e imagens</div>
+          </div>
+        </div>
+
+        <div class="bg-settings-container">
+          <!-- CORES -->
+          <div class="bg-settings-section">
+            <h3>Paleta de Cores Profissional</h3>
+            
+            <div class="color-swatch">
+              <div class="color-swatch-box" style="background: #1e40af;"></div>
+              <div class="color-swatch-info">
+                <div class="color-swatch-label">Azul Profissional</div>
+                <div class="color-swatch-value">#1e40af</div>
+              </div>
+            </div>
+
+            <div class="color-swatch">
+              <div class="color-swatch-box" style="background: #ea580c;"></div>
+              <div class="color-swatch-info">
+                <div class="color-swatch-label">Laranja Profissional</div>
+                <div class="color-swatch-value">#ea580c</div>
+              </div>
+            </div>
+
+            <div class="color-swatch">
+              <div class="color-swatch-box" style="background: #0891b2;"></div>
+              <div class="color-swatch-info">
+                <div class="color-swatch-label">Ciano</div>
+                <div class="color-swatch-value">#0891b2</div>
+              </div>
+            </div>
+
+            <div class="color-swatch">
+              <div class="color-swatch-box" style="background: #059669;"></div>
+              <div class="color-swatch-info">
+                <div class="color-swatch-label">Verde Profissional</div>
+                <div class="color-swatch-value">#059669</div>
+              </div>
+            </div>
+
+            <button class="btn btn-ghost" onclick="changeTheme()" style="width: 100%; margin-top: 12px;">
+              <i class="ph ph-moon" id="theme-icon"></i> Alternar Tema
+            </button>
+          </div>
+
+          <!-- BACKGROUND -->
+          <div class="bg-settings-section">
+            <h3>Imagem de Fundo</h3>
+            
+            <div class="bg-upload-zone" id="uploadZone" ondrop="handleBgDrop(event)" ondragover="handleBgDragOver(event)" ondragleave="handleBgDragLeave(event)" onclick="document.getElementById('bgInput').click()">
+              <i class="ph ph-upload"></i>
+              <p>Clique ou arraste uma imagem</p>
+              <small>PNG, JPG, WebP (até 5MB)</small>
+              <input type="file" id="bgInput" accept="image/*" style="display: none;" onchange="handleBgImageUpload(event)">
+            </div>
+
+            <h4 style="margin: 16px 0 8px; font-size: 13px; font-weight: 600; color: var(--text-secondary);">Transparência</h4>
+            <div class="bg-transparency-control">
+              <input type="range" min="0" max="100" value="8" id="bgOpacity" onchange="updateBgOpacity()">
+              <span class="transparency-value" id="opacityValue">8%</span>
+            </div>
+
+            <h4 style="margin: 16px 0 8px; font-size: 13px; font-weight: 600; color: var(--text-secondary);">Prévia</h4>
+            <div class="bg-preview" id="bgPreview"></div>
+
+            <button class="btn-clear-bg" onclick="clearBgImage()">
+              <i class="ph ph-trash"></i> Remover Fundo
+            </button>
+          </div>
+        </div>
+      </section>
+
     </div><!-- /content-area -->
   </div><!-- /main -->
 </div><!-- /app -->
@@ -3520,6 +4240,77 @@ tbody tr:last-child td { border-bottom: none; }
         <i class="ph ph-kanban" style="color:var(--success);"></i> Projetos
       </div>
       <div id="hist-projetos-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: AGENDA EVENT -->
+<div class="modal-agenda" id="modal-agenda-event">
+  <div class="modal-agenda-box">
+    <div class="modal-agenda-header">
+      <span id="agenda-modal-title">Novo Compromisso</span>
+      <button class="modal-close-btn" onclick="closeAgendaModal()">
+        <i class="ph ph-x"></i>
+      </button>
+    </div>
+
+    <form id="agenda-form" onsubmit="saveAgendaEvent(event)">
+      <div class="agenda-form-group">
+        <label>Título</label>
+        <input type="text" id="agenda-event-title" required>
+      </div>
+
+      <div class="agenda-form-group">
+        <label>Descrição</label>
+        <textarea id="agenda-event-desc" placeholder="Detalhes do evento..."></textarea>
+      </div>
+
+      <div class="agenda-form-group">
+        <label>Data</label>
+        <input type="date" id="agenda-event-date" required>
+      </div>
+
+      <div class="agenda-form-group">
+        <label>Hora</label>
+        <input type="time" id="agenda-event-time" required>
+      </div>
+
+      <div class="agenda-form-group">
+        <label>Tipo de Evento</label>
+        <select id="agenda-event-type">
+          <option value="commitment">Compromisso</option>
+          <option value="task">Tarefa</option>
+          <option value="project">Projeto</option>
+        </select>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeAgendaModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar Evento</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: AGENDA EVENT DETAILS -->
+<div class="modal-agenda" id="modal-agenda-details">
+  <div class="modal-agenda-box">
+    <div class="modal-agenda-header">
+      <span id="details-event-title">Detalhes</span>
+      <button class="modal-close-btn" onclick="closeAgendaDetailsModal()">
+        <i class="ph ph-x"></i>
+      </button>
+    </div>
+
+    <div id="agenda-details-content">
+      <!-- Content injected here -->
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-danger" onclick="deleteAgendaEvent()" style="margin-right: auto;">
+        <i class="ph ph-trash"></i> Deletar
+      </button>
+      <button type="button" class="btn btn-ghost" onclick="closeAgendaDetailsModal()">Fechar</button>
     </div>
   </div>
 </div>
