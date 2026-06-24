@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -4062,7 +4061,7 @@ function renderProjetos(filterStatus = '') {
       <td style="font-family:var(--font-mono);font-size:13px;">${fmt(p.valor)}</td>
       <td>
         <div class="table-actions">
-          ${p.status === 'implantacao' ? `<button class="act-btn" onclick="enviarProjetoParaProduto('${p.id}')" title="Enviar para Produtos" style="color:#38bdf8;"><i class="ph ph-paper-plane-tilt"></i></button>` : ''}
+          ${(p.status === 'implantacao' || p.fase === 'Implantação') ? `<button class="act-btn" onclick="enviarProjetoParaProduto('${p.id}')" title="Enviar para Produtos" style="color:#38bdf8;"><i class="ph ph-paper-plane-tilt"></i></button>` : ''}
           <button class="act-btn act-edit" onclick="editProject('${p.id}')"><i class="ph ph-pencil-simple"></i></button>
           <button class="act-btn act-delete" onclick="deleteProject('${p.id}')"><i class="ph ph-trash"></i></button>
         </div>
@@ -4109,8 +4108,8 @@ function filterProjectsByStatus(s) { renderProjetos(s); }
 function enviarProjetoParaProduto(id) {
   const p = state.projetos.find(proj => proj.id === id);
   if (!p) return;
-  if (p.status !== 'implantacao') {
-    toast('Só é possível enviar projetos no status Implantação.', 'error');
+  if (p.status !== 'implantacao' && p.fase !== 'Implantação') {
+    toast('Só é possível enviar projetos em Implantação (status ou fase).', 'error');
     return;
   }
   if (!confirm(`Enviar "${p.nome}" para Produtos? O projeto será removido da lista de Projetos.`)) return;
