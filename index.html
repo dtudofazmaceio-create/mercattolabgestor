@@ -7627,7 +7627,401 @@ async function init() {
   }
 }
 
+// ─── AGENDA SYSTEM ────────────────────────────────────────
+let agendaState = {
+  events: [],
+  currentDate: new Date(),
+  selectedDate: new Date(),
+  currentEventId: null,
+  currentEventType: 'commitment'
+};
+
+const eventTypes = {
+  commitment: { label: 'Compromisso', color: '#0891b2' },
+  task: { label: 'Tarefa', color: '#059669' },
+  project: { label: 'Projeto', color: '#ea580c' }
+};
+
+function initAgenda() {
+  loadAgendaState();
+  renderAgendaCalendar();
+  renderAgendaEvents();
+}
+
+function loadAgendaState() {
+  const saved = localStorage.getItem('gestorpro_agenda');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    agendaState = { ...agendaState, ...parsed };
+    agendaState.currentDate = new Date(agendaState.currentDate);
+    agendaState.selectedDate = new Date(agendaState.selectedDate);
+  }
+}
+
+function saveAgendaState() {
+  const toSave = {
+    events: agendaState.events,
+    currentDate: agendaState.currentDate.toISOString(),
+    selectedDate: agendaState.selectedDate.toISOString()
+  };
+  localStorage.setItem('gestorpro_agenda', JSON.stringify(toSave));
+}
+
+function renderAgendaCalendar() {
+  const year = agendaState.currentDate.getFullYear();
+  const month = agendaState.currentDate.getMonth();
+  
+  const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  const calendarTitle = document.getElementById('calendar-title');
+  if (calendarTitle) {
+    calendarTitle.textContent = `${monthNames[month]} ${year}`;
+  }
+  
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const prevLastDay = new Date(year, month, 0);
+  const nextDays = 7 - lastDay.getDay();
+  
+  const daysHTML = [];
+  
+  // Previous month days
+  for (let i = firstDay.getDay(); i > 0; i--) {
+    const day = prevLastDay.getDate() - i + 1;
+    daysHTML.push(`<div class="calendar-day" style="opacity: 0.4;">${day}</div>`);
+  }
+  
+  // Current month days
+  for (let day = 1; day <= lastDay.getDate(); day++) {
+    const date = new Date(year, month, day);
+    const dateStr = formatAgendaDate(date);
+    const hasEvents = agendaState.events.some(e => e.date === dateStr);
+    const isToday = date.toDateString() === new Date().toDateString();
+    const isSelected = date.toDateString() === agendaState.selectedDate.toDateString();
+    
+    let classes = 'calendar-day';
+    if (isToday) classes += ' today';
+    if (isSelected) classes += ' selected';
+    if (hasEvents) classes += ' has-events';
+    
+    daysHTML.push(
+      `<div class="${classes}" onclick="selectAgendaDate(new Date(${year}, ${month}, ${day}))">
+        ${day}
+      </div>`
+    );
+  }
+  
+  // Next month days
+  for (let day = 1; day <= nextDays; day++) {
+    daysHTML.push(`<div class="calendar-day" style="opacity: 0.4;">${day}</div>`);
+  }
+  
+  const calendarDaysEl = document.getElementById('calendar-days');
+  if (calendarDaysEl) {
+    calendarDaysEl.innerHTML = daysHTML.join('');
+  }
+}
+
+function selectAgendaDate(date) {
+  agendaState.selectedDate = date;
+  renderAgendaCalendar();
+  renderAgendaEvents();
+  saveAgendaState();
+}
+
+function previousMonth() {
+  agendaState.currentDate.setMonth(agendaState.currentDate.getMonth() - 1);
+  renderAgendaCalendar();
+}
+
+function nextMonth() {
+  agendaState.currentDate.setMonth(agendaState.currentDate.getMonth() + 1);
+  renderAgendaCalendar();
+}
+
+function renderAgendaEvents() {
+  const dateStr = formatAgendaDate(agendaState.selectedDate);
+  const dayName = agendaState.selectedDate.toLocaleDateString('pt-BR', { weekday: 'long' });
+  const dayDate = agendaState.selectedDate.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' });
+  
+  const eventsDayEl = document.getElementById('events-date');
+  if (eventsDayEl) {
+    eventsDayEl.textContent = `(${dayName}, ${dayDate})`;
+  }
+  
+  const events = agendaState.events.filter(e => e.date === dateStr).sort((a, b) => a.time.localeCompare(b.time));
+  
+  const eventsListEl = document.getElementById('events-list');
+  if (!eventsListEl) return;
+  
+  if (events.length === 0) {
+    eventsListEl.innerHTML = `
+      <div style="text-align: center; color: var(--text-muted); padding: 32px 16px;">
+        <i class="ph ph-calendar-blank" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 12px;"></i>
+        <p>Nenhum evento neste dia</p>
+      </div>
+    `;
+    return;
+  }
+  
+  eventsListEl.innerHTML = events.map(event => `
+    <div class="event-item ${event.type}" onclick="showAgendaEventDetails('${event.id}')">
+      <div class="event-item-header">
+        <div>
+          <div class="event-item-title">${event.title}</div>
+          <div class="event-item-time">
+            <i class="ph ph-clock" style="font-size: 12px;"></i> ${event.time}
+          </div>
+        </div>
+        <span class="event-item-badge">${eventTypes[event.type]?.label || 'Evento'}</span>
+      </div>
+      ${event.description ? `<div class="event-item-desc">${event.description}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function openAgendaModal(type = 'commitment') {
+  agendaState.currentEventType = type;
+  agendaState.currentEventId = null;
+  
+  const titles = {
+    commitment: 'Novo Compromisso',
+    task: 'Nova Tarefa',
+    project: 'Novo Projeto'
+  };
+  
+  const titleEl = document.getElementById('agenda-modal-title');
+  if (titleEl) titleEl.textContent = titles[type];
+  
+  const typeEl = document.getElementById('agenda-event-type');
+  if (typeEl) typeEl.value = type;
+  
+  const dateEl = document.getElementById('agenda-event-date');
+  if (dateEl) dateEl.value = formatAgendaDate(agendaState.selectedDate);
+  
+  document.getElementById('agenda-event-title').value = '';
+  document.getElementById('agenda-event-desc').value = '';
+  document.getElementById('agenda-event-time').value = '09:00';
+  
+  const modal = document.getElementById('modal-agenda-event');
+  if (modal) modal.classList.add('active');
+}
+
+function closeAgendaModal() {
+  const modal = document.getElementById('modal-agenda-event');
+  if (modal) modal.classList.remove('active');
+}
+
+function saveAgendaEvent(e) {
+  e.preventDefault();
+  
+  const event = {
+    id: agendaState.currentEventId || 'evt_' + Date.now(),
+    title: document.getElementById('agenda-event-title').value,
+    description: document.getElementById('agenda-event-desc').value,
+    date: document.getElementById('agenda-event-date').value,
+    time: document.getElementById('agenda-event-time').value,
+    type: document.getElementById('agenda-event-type').value,
+    createdAt: new Date().toISOString()
+  };
+  
+  if (agendaState.currentEventId) {
+    const index = agendaState.events.findIndex(e => e.id === agendaState.currentEventId);
+    if (index !== -1) agendaState.events[index] = event;
+  } else {
+    agendaState.events.push(event);
+  }
+  
+  saveAgendaState();
+  renderAgendaCalendar();
+  renderAgendaEvents();
+  closeAgendaModal();
+  toast('Evento salvo com sucesso!');
+}
+
+function showAgendaEventDetails(id) {
+  const event = agendaState.events.find(e => e.id === id);
+  if (!event) return;
+  
+  agendaState.currentEventId = id;
+  
+  const titleEl = document.getElementById('details-event-title');
+  if (titleEl) titleEl.textContent = event.title;
+  
+  const contentEl = document.getElementById('agenda-details-content');
+  if (contentEl) {
+    contentEl.innerHTML = `
+      <div class="agenda-form-group">
+        <label>Tipo</label>
+        <div style="padding: 10px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          ${eventTypes[event.type]?.label || 'Evento'}
+        </div>
+      </div>
+      
+      <div class="agenda-form-group">
+        <label>Data</label>
+        <div style="padding: 10px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          ${new Date(event.date).toLocaleDateString('pt-BR')}
+        </div>
+      </div>
+      
+      <div class="agenda-form-group">
+        <label>Hora</label>
+        <div style="padding: 10px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          ${event.time}
+        </div>
+      </div>
+      
+      ${event.description ? `
+      <div class="agenda-form-group">
+        <label>Descrição</label>
+        <div style="padding: 10px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); line-height: 1.6;">
+          ${event.description}
+        </div>
+      </div>
+      ` : ''}
+    `;
+  }
+  
+  const modal = document.getElementById('modal-agenda-details');
+  if (modal) modal.classList.add('active');
+}
+
+function closeAgendaDetailsModal() {
+  const modal = document.getElementById('modal-agenda-details');
+  if (modal) modal.classList.remove('active');
+  agendaState.currentEventId = null;
+}
+
+function deleteAgendaEvent() {
+  if (!agendaState.currentEventId) return;
+  
+  if (confirm('Deseja realmente deletar este evento?')) {
+    agendaState.events = agendaState.events.filter(e => e.id !== agendaState.currentEventId);
+    saveAgendaState();
+    renderAgendaCalendar();
+    renderAgendaEvents();
+    closeAgendaDetailsModal();
+    toast('Evento deletado');
+  }
+}
+
+function formatAgendaDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// ─── BACKGROUND & PERSONALIZATION ────────────────────────
+function handleBgDragOver(e) {
+  e.preventDefault();
+  const zone = document.getElementById('uploadZone');
+  if (zone) zone.classList.add('active');
+}
+
+function handleBgDragLeave(e) {
+  const zone = document.getElementById('uploadZone');
+  if (zone) zone.classList.remove('active');
+}
+
+function handleBgDrop(e) {
+  e.preventDefault();
+  const zone = document.getElementById('uploadZone');
+  if (zone) zone.classList.remove('active');
+  
+  const files = e.dataTransfer.files;
+  if (files.length > 0) {
+    handleBgImageUpload({ target: { files: files } });
+  }
+}
+
+function handleBgImageUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  if (file.size > 5 * 1024 * 1024) {
+    toast('Imagem muito grande (máximo 5MB)', 'error');
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const bgImage = event.target.result;
+    localStorage.setItem('gestorpro_bg_image', bgImage);
+    document.body.style.backgroundImage = `url('${bgImage}')`;
+    updateBgPreview();
+    toast('Fundo atualizado!');
+  };
+  reader.readAsDataURL(file);
+}
+
+function updateBgOpacity() {
+  const opacity = parseInt(document.getElementById('bgOpacity').value);
+  
+  const pseudo = document.createElement('style');
+  pseudo.textContent = `body::before { opacity: ${opacity / 100} !important; }`;
+  document.head.appendChild(pseudo);
+  
+  const valueEl = document.getElementById('opacityValue');
+  if (valueEl) valueEl.textContent = opacity + '%';
+  
+  localStorage.setItem('gestorpro_bg_opacity', opacity);
+  updateBgPreview();
+}
+
+function updateBgPreview() {
+  const bgImage = localStorage.getItem('gestorpro_bg_image');
+  const preview = document.getElementById('bgPreview');
+  if (preview) {
+    preview.style.backgroundImage = bgImage ? `url('${bgImage}')` : 'none';
+  }
+}
+
+function clearBgImage() {
+  if (confirm('Remover imagem de fundo?')) {
+    localStorage.removeItem('gestorpro_bg_image');
+    document.body.style.backgroundImage = 'none';
+    updateBgPreview();
+    toast('Fundo removido');
+  }
+}
+
+function initBackgroundSettings() {
+  const bgImg = localStorage.getItem('gestorpro_bg_image');
+  if (bgImg) {
+    document.body.style.backgroundImage = `url('${bgImg}')`;
+  }
+  
+  const bgOp = localStorage.getItem('gestorpro_bg_opacity');
+  if (bgOp) {
+    const opacityEl = document.getElementById('bgOpacity');
+    if (opacityEl) {
+      opacityEl.value = parseInt(bgOp);
+      updateBgOpacity();
+    }
+  }
+  
+  updateBgPreview();
+}
+
+// ─── THEME CHANGE ────────────────────────────────────────
+function changeTheme() {
+  const body = document.body;
+  const isDark = !body.classList.contains('light');
+  
+  if (isDark) {
+    body.classList.add('light');
+    localStorage.setItem('gestorpro_theme', 'light');
+  } else {
+    body.classList.remove('light');
+    localStorage.setItem('gestorpro_theme', 'dark');
+  }
+}
+
 init();
+initAgenda();
+initBackgroundSettings();
 </script>
 </body>
 </html>
