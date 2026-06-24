@@ -47,24 +47,27 @@ window.FIREBASE_CONFIG = {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root {
-  --bg: #0c0e14;
-  --bg-card: #12151f;
-  --bg-sidebar: #0e1018;
-  --bg-input: #1a1d2b;
-  --bg-hover: #1e2235;
+  --bg: #0a0c15;
+  --bg-card: #141723;
+  --bg-sidebar: #0d0f1a;
+  --bg-input: #191d2c;
+  --bg-hover: #1f2438;
   --border: rgba(255,255,255,0.07);
   --border-active: rgba(99,102,241,0.5);
   --primary: #6366f1;
   --primary-light: #818cf8;
   --primary-dim: rgba(99,102,241,0.12);
+  --violet: #8b5cf6;
+  --violet-light: #a78bfa;
+  --brand-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   --success: #10b981;
   --success-dim: rgba(16,185,129,0.12);
-  --danger: #ef4444;
-  --danger-dim: rgba(239,68,68,0.12);
+  --danger: #f43f5e;
+  --danger-dim: rgba(244,63,94,0.12);
   --warning: #f59e0b;
   --warning-dim: rgba(245,158,11,0.12);
-  --text: #e2e5f1;
-  --text-muted: #6b7280;
+  --text: #e3e6f1;
+  --text-muted: #757d91;
   --text-faint: #374151;
   --radius: 12px;
   --radius-sm: 8px;
@@ -77,7 +80,7 @@ window.FIREBASE_CONFIG = {
 
 /* ─── LIGHT THEME ────────────────────────────── */
 body.light {
-  --bg: #f0f2f8;
+  --bg: #eef1f8;
   --bg-card: #ffffff;
   --bg-sidebar: #ffffff;
   --bg-input: #f4f5fb;
@@ -87,10 +90,13 @@ body.light {
   --primary: #6366f1;
   --primary-light: #4f52d4;
   --primary-dim: rgba(99,102,241,0.1);
+  --violet: #7c3aed;
+  --violet-light: #8b5cf6;
+  --brand-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   --success: #059669;
   --success-dim: rgba(5,150,105,0.1);
-  --danger: #dc2626;
-  --danger-dim: rgba(220,38,38,0.1);
+  --danger: #e11d48;
+  --danger-dim: rgba(225,29,72,0.1);
   --warning: #d97706;
   --warning-dim: rgba(217,119,6,0.1);
   --text: #111827;
@@ -185,12 +191,13 @@ body {
 
 .login-logo .logo-icon {
   width: 40px; height: 40px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  background: var(--brand-gradient);
   border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   font-size: 20px;
   color: white;
   box-shadow: 0 4px 15px rgba(99,102,241,0.4);
+  overflow: hidden;
 }
 
 .login-logo span {
@@ -460,13 +467,31 @@ body {
 
 .sidebar-logo .logo-icon {
   width: 34px; height: 34px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  background: var(--brand-gradient);
   border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
   font-size: 16px;
   color: white;
   box-shadow: 0 3px 10px rgba(99,102,241,0.35);
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* Quando há logomarca carregada, o ícone vira moldura para a imagem */
+.logo-icon.has-logo {
+  background: transparent !important;
+  box-shadow: none !important;
+  width: auto !important;
+  min-width: 34px;
+  max-width: 160px;
+  border-radius: 6px;
+}
+.login-logo .logo-icon.has-logo { max-width: 200px; }
+.logo-icon .logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .sidebar-logo .brand {
@@ -546,7 +571,7 @@ body {
 
 .user-avatar {
   width: 32px; height: 32px;
-  background: linear-gradient(135deg, var(--primary), #a78bfa);
+  background: var(--brand-gradient);
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 13px;
@@ -2174,7 +2199,7 @@ tbody tr:last-child td { border-bottom: none; }
   </div>
   <div class="login-box">
     <div class="login-logo">
-      <div class="logo-icon"><i class="ph ph-lightning"></i></div>
+      <div class="logo-icon" id="login-logo-icon"><i class="ph ph-lightning"></i><img class="logo-img" id="login-logo-img" alt="Logomarca" style="display:none;"></div>
       <span>Gestor<em>PRO</em></span>
     </div>
     <h2 id="login-title">Bem-vindo de volta</h2>
@@ -2261,7 +2286,7 @@ tbody tr:last-child td { border-bottom: none; }
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-icon"><i class="ph ph-lightning"></i></div>
+      <div class="logo-icon" id="sidebar-logo-icon"><i class="ph ph-lightning"></i><img class="logo-img" id="sidebar-logo-img" alt="Logomarca" style="display:none;"></div>
       <span class="brand">Gestor<em>PRO</em></span>
     </div>
 
@@ -2344,7 +2369,7 @@ tbody tr:last-child td { border-bottom: none; }
         <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Alternar tema">
           <i class="ph ph-sun" id="theme-icon"></i>
         </button>
-        <div id="topbar-avatar" style="display:none;width:32px;height:32px;background:linear-gradient(135deg,var(--primary),#a78bfa);border-radius:50%;align-items:center;justify-content:center;font-size:13px;color:white;font-weight:700;cursor:pointer;" onclick="showPage('configuracoes')">A</div>
+        <div id="topbar-avatar" style="display:none;width:32px;height:32px;background:var(--brand-gradient);border-radius:50%;align-items:center;justify-content:center;font-size:13px;color:white;font-weight:700;cursor:pointer;" onclick="showPage('configuracoes')">A</div>
       </div>
     </header>
 
@@ -2770,7 +2795,9 @@ tbody tr:last-child td { border-bottom: none; }
             <div class="form-group full">
               <label>Logomarca (PNG/JPG)</label>
               <input type="file" id="cfg-logo" accept="image/png,image/jpeg" onchange="previewLogo(this)">
+              <span style="font-size:11px;color:var(--text-muted);margin-top:4px;display:block;">Ao carregar, a logomarca substitui o ícone padrão no cabeçalho e na tela de login.</span>
               <img id="logo-preview" src="#" style="display:none;max-width:180px;margin-top:10px;border-radius:8px;">
+              <button type="button" id="btn-remover-logo" onclick="removerLogo()" class="btn btn-ghost" style="display:none;margin-top:10px;color:var(--danger);"><i class="ph ph-trash"></i> Remover logomarca</button>
             </div>
             <div class="form-footer">
               <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Configurações</button>
@@ -3462,7 +3489,7 @@ tbody tr:last-child td { border-bottom: none; }
   <div class="modal-box" style="max-width:780px;max-height:85vh;overflow-y:auto;">
     <div class="modal-header" style="position:sticky;top:0;background:var(--bg-card);z-index:1;border-radius:var(--radius) var(--radius) 0 0;">
       <div style="display:flex;align-items:center;gap:10px;">
-        <div id="hist-avatar" style="width:38px;height:38px;background:linear-gradient(135deg,var(--primary),#a78bfa);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;font-weight:700;flex-shrink:0;">C</div>
+        <div id="hist-avatar" style="width:38px;height:38px;background:var(--brand-gradient);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;font-weight:700;flex-shrink:0;">C</div>
         <div>
           <span class="modal-title" id="hist-nome">Histórico do Cliente</span>
           <div id="hist-contato" style="font-size:12px;color:var(--text-muted);margin-top:1px;"></div>
@@ -5323,6 +5350,7 @@ function loadConfigForm() {
     document.getElementById('logo-preview').src = e.logo;
     document.getElementById('logo-preview').style.display = '';
   }
+  applyBrandLogo();
 }
 
 function previewLogo(input) {
@@ -5334,8 +5362,54 @@ function previewLogo(input) {
     document.getElementById('logo-preview').src = ev.target.result;
     document.getElementById('logo-preview').style.display = '';
     saveState();
+    applyBrandLogo();
   };
   reader.readAsDataURL(file);
+}
+
+// Aplica (ou remove) a logomarca da empresa no cabeçalho/sidebar e na tela de login
+function applyBrandLogo() {
+  const logo = state.empresa && state.empresa.logo;
+  [['sidebar-logo-icon', 'sidebar-logo-img'], ['login-logo-icon', 'login-logo-img']].forEach(([iconId, imgId]) => {
+    const icon = document.getElementById(iconId);
+    const img = document.getElementById(imgId);
+    if (!icon || !img) return;
+    const bolt = icon.querySelector('i');
+    // Texto da marca ao lado do ícone (.brand na sidebar, span no login)
+    const brandText = icon.parentElement.querySelector('.brand, span');
+    if (logo) {
+      img.src = logo;
+      img.style.display = '';
+      if (bolt) bolt.style.display = 'none';
+      icon.classList.add('has-logo');
+      if (brandText) brandText.style.display = 'none';
+    } else {
+      img.removeAttribute('src');
+      img.style.display = 'none';
+      if (bolt) bolt.style.display = '';
+      icon.classList.remove('has-logo');
+      if (brandText) brandText.style.display = '';
+    }
+  });
+  // Atualiza a pré-visualização nas Configurações
+  const prev = document.getElementById('logo-preview');
+  if (prev) {
+    if (logo) { prev.src = logo; prev.style.display = ''; }
+    else { prev.removeAttribute('src'); prev.style.display = 'none'; }
+  }
+  const removeBtn = document.getElementById('btn-remover-logo');
+  if (removeBtn) removeBtn.style.display = logo ? '' : 'none';
+}
+
+function removerLogo() {
+  if (!state.empresa.logo) return;
+  if (!confirm('Remover a logomarca? O ícone padrão voltará ao cabeçalho.')) return;
+  state.empresa.logo = '';
+  const fileEl = document.getElementById('cfg-logo');
+  if (fileEl) fileEl.value = '';
+  saveState();
+  applyBrandLogo();
+  toast('Logomarca removida.');
 }
 
 // ─── Backup ───────────────────────────────────────────────
@@ -6722,6 +6796,8 @@ async function init() {
   // Restore saved theme
   const savedTheme = localStorage.getItem('gestorpro_theme');
   applyTheme(savedTheme === 'light');
+  // Aplica a logomarca da empresa (cabeçalho + tela de login)
+  applyBrandLogo();
   // Desktop: menu lateral começa visível e só é ocultado pelos traços
   if (!isMobile()) {
     const sidebar = document.getElementById('sidebar');
