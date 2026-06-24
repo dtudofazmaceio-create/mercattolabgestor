@@ -3040,7 +3040,12 @@ tbody tr:last-child td { border-bottom: none; }
       </div>
       <div class="form-group">
         <label>Cliente *</label>
-        <select id="proj-cliente" required><option value="">Selecione</option></select>
+        <div style="display:flex;gap:8px;align-items:flex-end;">
+          <select id="proj-cliente" required style="flex:1;"><option value="">Selecione</option></select>
+          <button type="button" class="btn btn-primary" onclick="openCadastroClienteRapido('proj-cliente')" title="Cadastrar novo cliente" style="white-space:nowrap;flex-shrink:0;padding:10px 12px;">
+            <i class="ph ph-plus"></i> Novo
+          </button>
+        </div>
       </div>
       <div class="form-group">
         <label>Valor (R$)</label>
@@ -3311,7 +3316,7 @@ tbody tr:last-child td { border-bottom: none; }
         <label>Cliente *</label>
         <div style="display:flex;gap:8px;align-items:flex-end;">
           <select id="licenca-cliente" required style="flex:1;"><option value="">Selecione o cliente</option></select>
-          <button type="button" class="btn btn-primary" onclick="openCadastroClienteRapido()" title="Cadastrar novo cliente" style="white-space:nowrap;flex-shrink:0;padding:10px 12px;">
+          <button type="button" class="btn btn-primary" onclick="openCadastroClienteRapido('licenca-cliente')" title="Cadastrar novo cliente" style="white-space:nowrap;flex-shrink:0;padding:10px 12px;">
             <i class="ph ph-plus"></i> Novo
           </button>
         </div>
@@ -3381,7 +3386,7 @@ tbody tr:last-child td { border-bottom: none; }
 </div>
 
 <!-- Mini Modal: Cadastro Rápido de Cliente -->
-<div id="mini-modal-cliente-rapido" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;">
+<div id="mini-modal-cliente-rapido" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;align-items:center;justify-content:center;">
   <div class="modal-box" style="max-width:400px;">
     <div class="modal-header">
       <span class="modal-title">Cadastrar Novo Cliente</span>
@@ -6298,13 +6303,18 @@ function updateDate() {
 
 
 // ─── Cadastro Rápido de Cliente ─────────────────────────────
-function openCadastroClienteRapido() {
+let clienteRapidoDestino = null;
+
+function openCadastroClienteRapido(destinoSelectId) {
+  clienteRapidoDestino = destinoSelectId || 'licenca-cliente';
   document.getElementById('mini-modal-cliente-rapido').style.display = 'flex';
   document.getElementById('form-cliente-rapido').reset();
+  setTimeout(() => { document.getElementById('cliente-rapido-nome').focus(); }, 50);
 }
 
 function closeCadastroClienteRapido() {
   document.getElementById('mini-modal-cliente-rapido').style.display = 'none';
+  clienteRapidoDestino = null;
 }
 
 function saveClienteRapido(e) {
@@ -6319,14 +6329,16 @@ function saveClienteRapido(e) {
   };
   state.clientes.push(data);
   saveState();
-  
-  // Atualizar dropdown de clientes no modal de licença
-  populateClientDropdown('licenca-cliente');
-  
-  // Selecionar o cliente recém criado
-  document.getElementById('licenca-cliente').value = data.id;
-  
-  // Fechar o mini-modal
+  renderClientes();
+
+  // Atualiza o dropdown de clientes do formulário de origem (projeto, licença, etc.)
+  const destino = clienteRapidoDestino || 'licenca-cliente';
+  if (document.getElementById(destino)) {
+    populateClientDropdown(destino);
+    document.getElementById(destino).value = data.id;
+  }
+
+  // Fechar o mini-modal e voltar ao modal de origem (que permanece aberto)
   closeCadastroClienteRapido();
   toast('Cliente cadastrado e selecionado!');
 }
