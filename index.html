@@ -2155,6 +2155,58 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .alerta-licenca-card.urgente .alerta-licenca-prazo { color: var(--danger); }
 
+/* ─── ALERTAS NO CARD (Melhorias / Prazo) ────── */
+.card-alerts {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.card-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 3px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+  cursor: default;
+}
+.card-alert i { font-size: 12px; }
+/* Melhoria pendente — normal (atenção) */
+.card-alert.melhoria {
+  color: var(--warning);
+  background: rgba(217,119,6,0.12);
+  border: 1px solid rgba(217,119,6,0.35);
+}
+/* Melhoria pendente — urgente (precisa de mais atenção) */
+.card-alert.melhoria-urgente {
+  color: #fff;
+  background: var(--danger);
+  border: 1px solid var(--danger);
+  animation: cardAlertPulse 1.6s ease-in-out infinite;
+}
+/* Prazo apertado */
+.card-alert.prazo {
+  color: var(--warning);
+  background: rgba(217,119,6,0.12);
+  border: 1px solid rgba(217,119,6,0.35);
+}
+/* Prazo vencido / vence hoje */
+.card-alert.prazo-vencido {
+  color: #fff;
+  background: var(--danger);
+  border: 1px solid var(--danger);
+  animation: cardAlertPulse 1.6s ease-in-out infinite;
+}
+@keyframes cardAlertPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.45); }
+  50%      { box-shadow: 0 0 0 5px rgba(220,38,38,0); }
+}
+
 /* ─── PRINT ──────────────────────────────────── */
 @media print {
   .sidebar, .main .topbar, .action-row, .btn, #app > * { display: none !important; }
@@ -3923,6 +3975,10 @@ tbody tr:last-child td { border-bottom: none; }
         <textarea id="proj-melhorias" placeholder="Liste melhorias futuras, ajustes pendentes ou próximos passos deste projeto..."></textarea>
         <span style="font-size:11px;color:var(--text-muted);margin-top:4px;">Use uma melhoria por linha para acompanhar o que ainda falta evoluir.</span>
       </div>
+      <div class="form-group full" style="flex-direction:row;align-items:center;gap:8px;">
+        <input type="checkbox" id="proj-melhorias-urgente" style="width:auto;">
+        <label style="margin:0;"><i class="ph ph-warning-octagon" style="color:var(--danger);"></i> Marcar melhorias como <strong>URGENTES</strong> (sinalização vermelha no card)</label>
+      </div>
       <div class="form-footer">
         <button type="button" class="btn btn-secondary" onclick="closeModal('project')">Cancelar</button>
         <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar</button>
@@ -4234,6 +4290,10 @@ tbody tr:last-child td { border-bottom: none; }
         <label><i class="ph ph-rocket-launch" style="color:var(--primary-light);"></i> Melhorias a implementar</label>
         <textarea id="produto-melhorias" placeholder="Liste melhorias futuras, ajustes pendentes ou próximos passos deste produto..."></textarea>
         <span style="font-size:11px;color:var(--text-muted);margin-top:4px;">Use uma melhoria por linha para acompanhar o que ainda falta evoluir.</span>
+      </div>
+      <div class="form-group full" style="flex-direction:row;align-items:center;gap:8px;">
+        <input type="checkbox" id="produto-melhorias-urgente" style="width:auto;">
+        <label style="margin:0;"><i class="ph ph-warning-octagon" style="color:var(--danger);"></i> Marcar melhorias como <strong>URGENTES</strong> (sinalização vermelha no card)</label>
       </div>
       <div class="form-group full">
         <label>Anexar Arquivo HTML</label>
@@ -5058,6 +5118,54 @@ const statusBadge = {
   cancelado: '<span class="badge badge-cancelled">Cancelado</span>',
 };
 
+// ─── Alertas nos cards (Melhorias pendentes / Prazo) ──────
+// Quantidade de melhorias pendentes (uma por linha, ignora linhas vazias)
+function contarMelhoriasPendentes(texto) {
+  if (!texto) return 0;
+  return texto.split('\n').map(l => l.trim()).filter(Boolean).length;
+}
+
+// Avalia o prazo de entrega de um projeto.
+// Retorna null se não houver prazo relevante, ou um objeto com nível e texto.
+function avaliarPrazo(p, limiteDias = 7) {
+  if (!p || !p.dataFim) return null;
+  // Projetos concluídos ou cancelados não geram alerta de prazo
+  if (p.status === 'concluido' || p.status === 'cancelado') return null;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const fim = new Date(p.dataFim + 'T00:00:00');
+  if (isNaN(fim.getTime())) return null;
+  const dias = Math.round((fim - hoje) / 86400000);
+  if (dias < 0)  return { nivel: 'vencido',  dias, texto: `Atrasado ${Math.abs(dias)}d` };
+  if (dias === 0) return { nivel: 'vencido', dias, texto: 'Vence HOJE' };
+  if (dias <= limiteDias) return { nivel: 'apertado', dias, texto: `Vence em ${dias}d` };
+  return null;
+}
+
+// Gera o HTML dos selos de alerta exibidos no card/linha.
+// opts.prazo = true para avaliar prazo (somente projetos).
+function gerarAlertasCard(p, opts = {}) {
+  const selos = [];
+  const qtd = contarMelhoriasPendentes(p.melhorias);
+  if (qtd > 0) {
+    const urgente = !!p.melhoriasUrgente;
+    const cls = urgente ? 'melhoria-urgente' : 'melhoria';
+    const icon = urgente ? 'ph-warning-octagon' : 'ph-wrench';
+    const titulo = urgente
+      ? `${qtd} melhoria(s) URGENTE(S) a aplicar — precisa de atenção imediata`
+      : `${qtd} melhoria(s) a aplicar`;
+    const rotulo = urgente ? `${qtd} urgente${qtd>1?'s':''}` : `${qtd} melhoria${qtd>1?'s':''}`;
+    selos.push(`<span class="card-alert ${cls}" title="${titulo}"><i class="ph ${icon}"></i>${rotulo}</span>`);
+  }
+  if (opts.prazo) {
+    const pr = avaliarPrazo(p);
+    if (pr) {
+      const cls = pr.nivel === 'vencido' ? 'prazo-vencido' : 'prazo';
+      selos.push(`<span class="card-alert ${cls}" title="Prazo de entrega: ${pr.texto}"><i class="ph ph-clock-countdown"></i>${pr.texto}</span>`);
+    }
+  }
+  return selos.length ? `<span class="card-alerts">${selos.join('')}</span>` : '';
+}
+
 function saveProject(e) {
   e.preventDefault();
   const id = document.getElementById('project-id').value;
@@ -5075,6 +5183,7 @@ function saveProject(e) {
     link: document.getElementById('proj-link').value,
     desc: document.getElementById('proj-desc').value,
     melhorias: document.getElementById('proj-melhorias').value,
+    melhoriasUrgente: document.getElementById('proj-melhorias-urgente').checked,
     arquivoHTML: window.projArquivoHTML || null,
   };
   if (id) {
@@ -5104,6 +5213,7 @@ function renderProjetos(filterStatus = '') {
     tr.innerHTML = `
       <td>
         <strong>${p.nome}</strong>
+        ${gerarAlertasCard(p, { prazo: true })}
         ${p.link ? `<a href="${p.link}" target="_blank" style="color:var(--primary-light);font-size:12px;margin-left:6px;" title="Abrir link"><i class="ph ph-arrow-square-out"></i></a>` : ''}
         ${p.arquivoHTML ? `<button class="act-btn" onclick="viewProjectHTML('${p.id}')" style="background:none;border:none;color:var(--primary-light);cursor:pointer;font-size:12px;margin-left:6px;padding:0;" title="Visualizar HTML"><i class="ph ph-file-html"></i></button>` : ''}
       </td>
@@ -5143,6 +5253,7 @@ function editProject(id) {
   document.getElementById('proj-link').value = p.link || '';
   document.getElementById('proj-desc').value = p.desc || '';
   document.getElementById('proj-melhorias').value = p.melhorias || '';
+  document.getElementById('proj-melhorias-urgente').checked = !!p.melhoriasUrgente;
   window.projArquivoHTML = p.arquivoHTML || null;
   updateProjectHTMLPreview();
   document.getElementById('modal-project-title').textContent = 'Editar Projeto';
@@ -5181,6 +5292,7 @@ function enviarProjetoParaProduto(id) {
     link: p.link || '',
     desc: p.desc || '',
     melhorias: p.melhorias || '',
+    melhoriasUrgente: !!p.melhoriasUrgente,
     arquivoHTML: p.arquivoHTML || null,
   };
   state.produtos.push(novoProduto);
@@ -5759,7 +5871,7 @@ function renderDashboard() {
     const prog = p.progresso || 0;
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><strong>${p.nome}</strong></td>
+      <td><strong>${p.nome}</strong>${gerarAlertasCard(p, { prazo: true })}</td>
       <td>${c ? c.nome : '—'}</td>
       <td>${statusBadge[p.status] || p.status}</td>
       <td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:70px;"><div class="progress-fill" style="width:${prog}%"></div></div><span style="font-size:11px;color:var(--text-muted);">${prog}%</span></div></td>
@@ -6977,6 +7089,7 @@ function saveProduto(e) {
     link: document.getElementById('produto-link').value.trim(),
     desc: document.getElementById('produto-desc').value,
     melhorias: document.getElementById('produto-melhorias').value,
+    melhoriasUrgente: document.getElementById('produto-melhorias-urgente').checked,
     arquivoHTML: window.produtoArquivoHTML || null,
   };
   if (id) {
@@ -7001,6 +7114,7 @@ function editProduto(id) {
   document.getElementById('produto-link').value = p.link || '';
   document.getElementById('produto-desc').value = p.desc || '';
   document.getElementById('produto-melhorias').value = p.melhorias || '';
+  document.getElementById('produto-melhorias-urgente').checked = !!p.melhoriasUrgente;
   window.produtoArquivoHTML = p.arquivoHTML || null;
   document.getElementById('produto-arquivo-html').value = '';
   updateProdutoHTMLPreview();
@@ -7045,6 +7159,7 @@ function renderProdutos() {
     return `<tr>
       <td>
         <strong>${p.nome}</strong>
+        ${gerarAlertasCard(p, { prazo: false })}
         ${p.arquivoHTML ? `<button class="act-btn" onclick="viewProdutoHTML('${p.id}')" style="background:none;border:none;color:var(--primary-light);cursor:pointer;font-size:12px;margin-left:6px;padding:0;" title="Visualizar HTML"><i class="ph ph-file-html"></i></button>` : ''}
       </td>
       <td>${p.versao ? `<span class="badge badge-active">${p.versao}</span>` : '—'}</td>
