@@ -2940,7 +2940,7 @@ tbody tr:last-child td { border-bottom: none; }
         <i class="ph ph-seal-check"></i><span>Documentos</span>
       </button>
       <button class="nav-item" data-page="ferramentas" onclick="showPage('ferramentas')">
-        <i class="ph ph-link-simple"></i><span>Ferramentas Gerenciais</span>
+        <i class="ph ph-link-simple"></i><span>Ferramentas</span>
       </button>
 
       <div class="nav-section" style="margin-top:14px;">Licenciamento</div>
@@ -3071,6 +3071,20 @@ tbody tr:last-child td { border-bottom: none; }
               <button class="btn btn-ghost btn-icon" onclick="showPage('licencas')" title="Ver todas as licenças"><i class="ph ph-arrow-right"></i></button>
             </div>
             <div id="lista-alertas-licencas"></div>
+          </div>
+        </div>
+
+        <!-- ── ACESSO RÁPIDO: FERRAMENTAS ─────────────────── -->
+        <div id="dash-quick-ferramentas" style="margin-bottom:24px;display:none;">
+          <div class="card" style="border-color:rgba(30,64,175,0.25);">
+            <div class="card-header" style="margin-bottom:14px;">
+              <span class="card-title" style="display:flex;align-items:center;gap:8px;">
+                <i class="ph ph-link-simple" style="color:var(--primary-light);font-size:18px;"></i>
+                Acesso Rápido — Ferramentas Favoritas
+              </span>
+              <button class="btn btn-ghost btn-icon" onclick="showPage('ferramentas')" title="Ver todas as ferramentas"><i class="ph ph-arrow-right"></i></button>
+            </div>
+            <div id="dash-ferramentas-list" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
           </div>
         </div>
 
@@ -3611,11 +3625,11 @@ tbody tr:last-child td { border-bottom: none; }
         </div>
       </section>
 
-      <!-- PÁGINA: FERRAMENTAS GERENCIAIS -->
+      <!-- PÁGINA: FERRAMENTAS -->
       <section id="page-ferramentas" class="page">
         <div class="section-header">
           <div>
-            <div class="section-title">Ferramentas Gerenciais</div>
+            <div class="section-title">Ferramentas</div>
             <div class="section-sub">Seus links de acesso rápido para sistemas, planilhas e ferramentas usadas na gestão do negócio</div>
           </div>
           <button class="btn btn-primary" onclick="openModal('ferramenta')">
@@ -3994,6 +4008,55 @@ tbody tr:last-child td { border-bottom: none; }
   </div>
 </div>
 
+<!-- Modal de Credenciais da Ferramenta -->
+<div class="modal-overlay" id="modal-ferramenta-credenciais">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-header">
+      <span class="modal-title" style="display:flex;align-items:center;gap:8px;"><i class="ph ph-lock-key" style="color:var(--primary-light);"></i> <span id="cred-modal-titulo">Credenciais</span></span>
+      <button class="modal-close" onclick="closeModal('ferramenta-credenciais')"><i class="ph ph-x"></i></button>
+    </div>
+    <div style="padding:8px 0 4px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:14px;background:var(--bg-input);border-radius:var(--radius-sm);border:1px solid var(--border);">
+        <div id="cred-modal-icon" style="width:40px;height:40px;border-radius:9px;background:var(--primary-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;color:var(--primary-light);"></div>
+        <div>
+          <div id="cred-modal-nome" style="font-weight:700;font-size:15px;"></div>
+          <div id="cred-modal-url" style="font-size:12px;color:var(--text-muted);margin-top:2px;"></div>
+        </div>
+      </div>
+      <div id="cred-modal-login-group" style="display:none;margin-bottom:14px;">
+        <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Usuário / Login</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" id="cred-modal-login-val" readonly style="flex:1;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);font-family:var(--font-mono);font-size:13px;">
+          <button class="btn btn-ghost btn-icon" onclick="copiarCredencial('login')" title="Copiar usuário"><i class="ph ph-copy"></i></button>
+        </div>
+      </div>
+      <div id="cred-modal-senha-group" style="display:none;margin-bottom:20px;">
+        <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Senha</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="position:relative;flex:1;">
+            <input type="password" id="cred-modal-senha-val" readonly style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 38px 9px 12px;color:var(--text);font-family:var(--font-mono);font-size:13px;">
+            <button type="button" onclick="toggleCredSenha()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:17px;padding:0;line-height:1;">
+              <i class="ph ph-eye" id="cred-senha-toggle-icon"></i>
+            </button>
+          </div>
+          <button class="btn btn-ghost btn-icon" onclick="copiarCredencial('senha')" title="Copiar senha"><i class="ph ph-copy"></i></button>
+        </div>
+      </div>
+      <div id="cred-modal-aviso" style="display:none;padding:10px 14px;background:var(--warning-dim);border:1px solid rgba(217,119,6,0.3);border-radius:var(--radius-sm);font-size:12px;color:var(--text);margin-bottom:16px;">
+        <i class="ph ph-info" style="color:var(--warning);"></i> Nenhuma credencial cadastrada. Edite a ferramenta para adicionar.
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="abrirFerramentaDoModal()">
+          <i class="ph ph-arrow-square-out"></i> Abrir Ferramenta
+        </button>
+        <button class="btn btn-secondary" onclick="editFerramentaDoModal()" title="Editar ferramenta">
+          <i class="ph ph-pencil"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Ferramenta Gerencial Modal -->
 <div class="modal-overlay" id="modal-ferramenta">
   <div class="modal-box">
@@ -4044,6 +4107,16 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="form-group full">
         <label>Login / usuário <span style="color:var(--text-muted);font-weight:400;">(opcional)</span></label>
         <input type="text" id="ferramenta-login" placeholder="Ex: usuário ou e-mail de acesso">
+      </div>
+      <div class="form-group full">
+        <label><i class="ph ph-lock-key" style="color:var(--accent-light);"></i> Senha de acesso <span style="color:var(--text-muted);font-weight:400;">(opcional — para não esquecer)</span></label>
+        <div style="position:relative;">
+          <input type="password" id="ferramenta-senha" placeholder="Senha desta ferramenta" style="padding-right:40px;">
+          <button type="button" onclick="toggleFerramentaSenha()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:17px;padding:0;line-height:1;" title="Mostrar/ocultar senha">
+            <i class="ph ph-eye" id="btn-toggle-senha-icon"></i>
+          </button>
+        </div>
+        <span style="font-size:11px;color:var(--warning);margin-top:4px;display:flex;align-items:center;gap:4px;"><i class="ph ph-warning-circle"></i> Atenção: salvar senhas aqui é conveniente mas não é a forma mais segura. Para uso pessoal apenas.</span>
       </div>
       <div class="form-group full">
         <label>Observações <span style="color:var(--text-muted);font-weight:400;">(opcional)</span></label>
@@ -4857,6 +4930,10 @@ function openModal(type) {
   }
   if (type === 'ferramenta' && !document.getElementById('ferramenta-id').value) {
     document.getElementById('modal-ferramenta-title').textContent = 'Nova Ferramenta';
+    const senhaInp = document.getElementById('ferramenta-senha');
+    const senhaIco = document.getElementById('btn-toggle-senha-icon');
+    if (senhaInp) { senhaInp.type = 'password'; }
+    if (senhaIco) { senhaIco.className = 'ph ph-eye'; }
   }
   if (type === 'licenca') {
     populateClientDropdown('licenca-cliente');
@@ -5280,6 +5357,7 @@ function saveFerramenta(e) {
     categoria: document.getElementById('ferramenta-categoria').value,
     icone: document.getElementById('ferramenta-icone').value,
     login: document.getElementById('ferramenta-login').value,
+    senha: document.getElementById('ferramenta-senha').value,
     notas: document.getElementById('ferramenta-notas').value,
     favorito: document.getElementById('ferramenta-favorito').checked,
     criadaEm: existing ? existing.criadaEm : new Date().toISOString(),
@@ -5343,7 +5421,7 @@ function renderFerramentas() {
           <i class="ph ${f.favorito ? 'ph-star-fill' : 'ph-star'} fc-fav-star"></i>
         </button>
       </div>
-      ${f.login ? `<div class="fc-login"><i class="ph ph-user-circle"></i> ${esc(f.login)}</div>` : ''}
+      ${f.login ? `<div class="fc-login"><i class="ph ph-user-circle"></i> ${esc(f.login)}${f.senha ? ' <i class="ph ph-lock-key" style="color:var(--accent-light);font-size:12px;" title="Senha cadastrada"></i>' : ''}</div>` : (f.senha ? `<div class="fc-login"><i class="ph ph-lock-key" style="color:var(--accent-light);"></i> Senha cadastrada</div>` : '')}
       ${f.notas ? `<div class="fc-notas">${esc(f.notas)}</div>` : ''}
       <div class="fc-tags">
         <span class="ic-tag cat-${f.categoria}">${ferramentaCategoriaLabel[f.categoria] || f.categoria}</span>
@@ -5366,6 +5444,12 @@ function editFerramenta(id) {
   document.getElementById('ferramenta-categoria').value = f.categoria || 'produtividade';
   document.getElementById('ferramenta-icone').value = f.icone || 'ph-link-simple';
   document.getElementById('ferramenta-login').value = f.login || '';
+  document.getElementById('ferramenta-senha').value = f.senha || '';
+  // Reset toggle de senha
+  const senhaInput = document.getElementById('ferramenta-senha');
+  const senhaIcon = document.getElementById('btn-toggle-senha-icon');
+  if (senhaInput) senhaInput.type = 'password';
+  if (senhaIcon) senhaIcon.className = 'ph ph-eye';
   document.getElementById('ferramenta-notas').value = f.notas || '';
   document.getElementById('ferramenta-favorito').checked = !!f.favorito;
   document.getElementById('modal-ferramenta-title').textContent = 'Editar Ferramenta';
@@ -5388,10 +5472,87 @@ function toggleFerramentaFavorito(id) {
   renderFerramentas();
 }
 
+// ── ID da ferramenta atualmente no modal de credenciais ──
+let _credFerramentaId = null;
+
 function abrirFerramenta(id) {
   const f = state.ferramentas.find(x => x.id === id);
   if (!f) return;
-  window.open(f.link, '_blank', 'noopener');
+  // Se tem login ou senha, abre modal de credenciais antes
+  if (f.login || f.senha) {
+    _credFerramentaId = id;
+    document.getElementById('cred-modal-titulo').textContent = f.nome;
+    document.getElementById('cred-modal-nome').textContent = f.nome;
+    let hostname = f.link;
+    try { hostname = new URL(f.link).hostname.replace(/^www\./, ''); } catch(e){}
+    document.getElementById('cred-modal-url').textContent = hostname;
+    const iconEl = document.getElementById('cred-modal-icon');
+    iconEl.innerHTML = `<i class="ph ${f.icone || 'ph-link-simple'}"></i>`;
+    // Login
+    const loginGrp = document.getElementById('cred-modal-login-group');
+    const senhaGrp = document.getElementById('cred-modal-senha-group');
+    const aviso = document.getElementById('cred-modal-aviso');
+    if (f.login) {
+      loginGrp.style.display = '';
+      document.getElementById('cred-modal-login-val').value = f.login;
+    } else { loginGrp.style.display = 'none'; }
+    if (f.senha) {
+      senhaGrp.style.display = '';
+      document.getElementById('cred-modal-senha-val').value = f.senha;
+      document.getElementById('cred-modal-senha-val').type = 'password';
+      document.getElementById('cred-senha-toggle-icon').className = 'ph ph-eye';
+    } else { senhaGrp.style.display = 'none'; }
+    aviso.style.display = (!f.login && !f.senha) ? '' : 'none';
+    document.getElementById('modal-ferramenta-credenciais').classList.add('open');
+  } else {
+    window.open(f.link, '_blank', 'noopener');
+  }
+}
+
+function abrirFerramentaDoModal() {
+  const f = _credFerramentaId ? state.ferramentas.find(x => x.id === _credFerramentaId) : null;
+  if (f) window.open(f.link, '_blank', 'noopener');
+  closeModal('ferramenta-credenciais');
+}
+
+function editFerramentaDoModal() {
+  closeModal('ferramenta-credenciais');
+  if (_credFerramentaId) editFerramenta(_credFerramentaId);
+}
+
+function toggleCredSenha() {
+  const inp = document.getElementById('cred-modal-senha-val');
+  const icon = document.getElementById('cred-senha-toggle-icon');
+  if (!inp) return;
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.className = 'ph ph-eye-slash';
+  } else {
+    inp.type = 'password';
+    icon.className = 'ph ph-eye';
+  }
+}
+
+function copiarCredencial(tipo) {
+  const val = tipo === 'login'
+    ? document.getElementById('cred-modal-login-val')?.value
+    : document.getElementById('cred-modal-senha-val')?.value;
+  if (val) {
+    navigator.clipboard.writeText(val).then(() => toast(tipo === 'login' ? 'Usuário copiado!' : 'Senha copiada!'));
+  }
+}
+
+function toggleFerramentaSenha() {
+  const inp = document.getElementById('ferramenta-senha');
+  const icon = document.getElementById('btn-toggle-senha-icon');
+  if (!inp) return;
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.className = 'ph ph-eye-slash';
+  } else {
+    inp.type = 'password';
+    icon.className = 'ph ph-eye';
+  }
 }
 
 // ─── Financeiro ───────────────────────────────────────────
@@ -7557,11 +7718,31 @@ function renderDashboard() {
     }
   }
 
+  // ── Painel de Acesso Rápido: Ferramentas ─────────────────
+  const dashQuick = document.getElementById('dash-quick-ferramentas');
+  const dashFList = document.getElementById('dash-ferramentas-list');
+  if (dashQuick && dashFList) {
+    const favs = (state.ferramentas || []).filter(f => f.favorito);
+    const toShow = favs.length ? favs : (state.ferramentas || []).slice(0, 6);
+    if (toShow.length) {
+      dashQuick.style.display = '';
+      const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      dashFList.innerHTML = toShow.map(f => {
+        const hasCredenciais = f.login || f.senha;
+        return `<button onclick="abrirFerramenta('${f.id}')" title="Abrir ${esc(f.nome)}" style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;color:var(--text);font-size:13px;font-weight:500;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--border-active)';this.style.background='var(--bg-hover)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-input)'">
+          <i class="ph ${f.icone || 'ph-link-simple'}" style="color:var(--primary-light);font-size:16px;flex-shrink:0;"></i>
+          <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(f.nome)}</span>
+          ${hasCredenciais ? `<i class="ph ph-lock-key" style="color:var(--accent-light);font-size:12px;flex-shrink:0;" title="Credenciais salvas"></i>` : ''}
+        </button>`;
+      }).join('');
+    } else {
+      dashQuick.style.display = 'none';
+    }
+  }
+
   const mesRec = getByPeriod('esteMes').filter(t => t.tipo === 'receita').reduce((a, t) => a + t.valor, 0);
   document.getElementById('ds-receita').textContent = fmt(mesRec);
 }
-
-// ─── CLOUD SYNC (Firebase) ────────────────────────────────
 const Cloud = {
   app: null, auth: null, db: null,
   user: null,
