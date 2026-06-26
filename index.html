@@ -6849,7 +6849,7 @@ function loadConfigForm() {
   document.getElementById('cfg-razao').value = e.razao || '';
   document.getElementById('cfg-fantasia').value = e.fantasia || '';
   // JSONBin key — prefer localStorage, fall back to state
-  const jbKey = localStorage.getItem('gestorpro_jsonbin_key') || e.jsonbinKey || '$2a$10$xxIvXXIjG7A86QLIGEifv.jhyYGb3oxNTy37NWXJwY4/PDwozFjvK';
+  const jbKey = localStorage.getItem('gestorpro_jsonbin_key') || e.jsonbinKey || '';
   document.getElementById('cfg-jsonbin-key').value = jbKey;
   if (e.logo) {
     document.getElementById('logo-preview').src = e.logo;
@@ -7213,7 +7213,7 @@ function filterTable(tbId, query, cols) {
 
 // ─── JSONBin Key (salva em localStorage separado por segurança) ───
 function getJsonBinKey() {
-  return localStorage.getItem('gestorpro_jsonbin_key') || state.empresa.jsonbinKey || '$2a$10$xxIvXXIjG7A86QLIGEifv.jhyYGb3oxNTy37NWXJwY4/PDwozFjvK';
+  return localStorage.getItem('gestorpro_jsonbin_key') || state.empresa.jsonbinKey || '';
 }
 
 function saveJsonBinKey() {
