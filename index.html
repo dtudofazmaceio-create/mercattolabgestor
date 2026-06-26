@@ -145,12 +145,13 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
+  background-image: var(--bg-img, none);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  opacity: 0.08;
-  z-index: 0;
+  opacity: 0.22;
+  z-index: -2;
   pointer-events: none;
 }
 
@@ -162,18 +163,18 @@ body::after {
   width: 100%;
   height: 100%;
   background: linear-gradient(135deg, 
-    rgba(15,23,42,0.95) 0%, 
-    rgba(30,41,59,0.92) 50%,
-    rgba(15,23,42,0.95) 100%);
+    rgba(15,23,42,0.80) 0%, 
+    rgba(30,41,59,0.74) 50%,
+    rgba(15,23,42,0.80) 100%);
   z-index: -1;
   pointer-events: none;
 }
 
 body.light::after {
   background: linear-gradient(135deg, 
-    rgba(248,250,252,0.98) 0%, 
-    rgba(241,245,249,0.95) 50%,
-    rgba(248,250,252,0.98) 100%);
+    rgba(248,250,252,0.90) 0%, 
+    rgba(241,245,249,0.86) 50%,
+    rgba(248,250,252,0.90) 100%);
 }
 
 /* ─── SCROLLBAR ─────────────────────────────── */
@@ -694,6 +695,118 @@ body.light::after {
   padding: 5px 12px;
   border-radius: 20px;
   font-family: var(--font-mono);
+}
+
+/* ─── SINO DE ALERTAS ─────────────────────────── */
+.notif-wrap { position: relative; display: flex; }
+.notif-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px; height: 38px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--text-secondary);
+  font-size: 19px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.notif-btn:hover { color: var(--text); border-color: var(--border-active); background: var(--bg-hover); }
+.notif-btn.has-alerts { color: var(--warning); border-color: rgba(217,119,6,0.4); }
+.notif-badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  min-width: 18px; height: 18px;
+  padding: 0 5px;
+  background: var(--danger);
+  color: #fff;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  border: 2px solid var(--bg-card);
+  font-family: var(--font);
+}
+@keyframes notif-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.notif-badge { animation: notif-pop 0.2s ease; }
+.notif-panel {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  width: 360px;
+  max-width: calc(100vw - 24px);
+  max-height: 70vh;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.45);
+  z-index: 200;
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+}
+.notif-panel.open { display: flex; animation: fadeUp 0.18s ease forwards; }
+.notif-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.notif-panel-title { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.notif-panel-title i { color: var(--warning); }
+.notif-count-label { font-size: 12px; color: var(--text-muted); }
+.notif-list { overflow-y: auto; padding: 6px; }
+.notif-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  padding: 10px 10px 4px;
+}
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border-left: 3px solid transparent;
+}
+.notif-item:hover { background: var(--bg-hover); }
+.notif-item.sev-danger { border-left-color: var(--danger); }
+.notif-item.sev-warning { border-left-color: var(--warning); }
+.notif-item.sev-info { border-left-color: var(--primary-light); }
+.notif-item-icon {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.notif-item.sev-danger .notif-item-icon { background: var(--danger-dim); color: var(--danger); }
+.notif-item.sev-warning .notif-item-icon { background: var(--warning-dim); color: var(--warning); }
+.notif-item.sev-info .notif-item-icon { background: var(--primary-dim); color: var(--primary-light); }
+.notif-item-body { flex: 1; min-width: 0; }
+.notif-item-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.notif-item-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+.notif-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 36px 16px;
+}
+.notif-empty i { font-size: 42px; opacity: 0.3; display: block; margin-bottom: 10px; color: var(--success); }
+@media (max-width: 768px) {
+  .notif-panel { position: fixed; top: 58px; right: 8px; left: 8px; width: auto; max-width: none; }
 }
 
 .content-area {
@@ -2380,6 +2493,15 @@ tbody tr:last-child td { border-bottom: none; }
   font-size: 12px;
 }
 
+/* O contêiner dos dias ocupa as 7 colunas e vira uma grade própria,
+   espalhando cada dia na semana correta (antes ficavam empilhados numa coluna) */
+#calendar-days {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
 .calendar-day {
   aspect-ratio: 1;
   display: flex;
@@ -3045,6 +3167,19 @@ tbody tr:last-child td { border-bottom: none; }
         <span class="page-title" id="topbar-title">Painel Geral</span>
       </div>
       <div class="topbar-right">
+        <div class="notif-wrap">
+          <button class="notif-btn" id="notif-btn" onclick="toggleNotifPanel(event)" title="Alertas e pendências" aria-label="Alertas">
+            <i class="ph ph-bell"></i>
+            <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
+          </button>
+          <div class="notif-panel" id="notif-panel">
+            <div class="notif-panel-head">
+              <span class="notif-panel-title"><i class="ph ph-bell-ringing"></i> Alertas</span>
+              <span class="notif-count-label" id="notif-count-label"></span>
+            </div>
+            <div class="notif-list" id="notif-list"></div>
+          </div>
+        </div>
         <div class="sync-pill off" id="sync-pill" onclick="showPage('configuracoes')" title="Status da sincronização em nuvem">
           <i class="ph ph-cloud-slash"></i><span class="sync-label">Nuvem desativada</span>
         </div>
@@ -3836,8 +3971,8 @@ tbody tr:last-child td { border-bottom: none; }
 
             <h4 style="margin: 16px 0 8px; font-size: 13px; font-weight: 600; color: var(--text-secondary);">Transparência</h4>
             <div class="bg-transparency-control">
-              <input type="range" min="0" max="100" value="8" id="bgOpacity" onchange="updateBgOpacity()">
-              <span class="transparency-value" id="opacityValue">8%</span>
+              <input type="range" min="0" max="100" value="22" id="bgOpacity" onchange="updateBgOpacity()">
+              <span class="transparency-value" id="opacityValue">22%</span>
             </div>
 
             <h4 style="margin: 16px 0 8px; font-size: 13px; font-weight: 600; color: var(--text-secondary);">Prévia</h4>
@@ -4928,6 +5063,8 @@ function showPage(id) {
   else if (id === 'ideias') renderIdeias();
   else if (id === 'ferramentas') renderFerramentas();
   else if (id === 'configuracoes') loadConfigForm();
+
+  if (typeof renderNotifications === 'function') renderNotifications();
 }
 
 function isMobile() {
@@ -5031,6 +5168,7 @@ async function saveState() {
   state._updatedAt = Date.now();
   await idbSet('state', state);
   cloudPush();
+  if (typeof renderNotifications === 'function') renderNotifications();
 }
 
 // ─── Clientes ─────────────────────────────────────────────
@@ -6766,6 +6904,106 @@ function applyBrandLogo() {
   }
   const removeBtn = document.getElementById('btn-remover-logo');
   if (removeBtn) removeBtn.style.display = logo ? '' : 'none';
+  // Atualiza o ícone do app (tela inicial / PWA) com a logomarca
+  updateAppIcon();
+}
+
+// ─── Ícone do app na tela inicial (PWA) ───────────────────
+// Gera um ícone quadrado a partir da logomarca da empresa e o aplica
+// ao apple-touch-icon, ao favicon e ao manifest dinâmico, para que ao
+// "Adicionar à tela inicial" o ícone seja a logomarca inserida.
+let _manifestBlobUrl = null;
+
+function _drawDefaultGlyph(ctx, size) {
+  // Raio estilizado (mesma identidade do ícone ph-lightning)
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  const pts = [
+    [0.56,0.12],[0.30,0.55],[0.47,0.55],[0.42,0.88],[0.72,0.43],[0.53,0.43]
+  ];
+  pts.forEach(([x,y],i) => { const X=x*size, Y=y*size; i ? ctx.lineTo(X,Y) : ctx.moveTo(X,Y); });
+  ctx.closePath();
+  ctx.fill();
+}
+
+function _applyIconLinks(icon192, icon512) {
+  const head = document.head;
+  // apple-touch-icon (iOS)
+  let apple = document.querySelector('link[rel="apple-touch-icon"]');
+  if (!apple) { apple = document.createElement('link'); apple.rel = 'apple-touch-icon'; head.appendChild(apple); }
+  apple.href = icon192;
+  // favicon
+  let fav = document.querySelector('link[rel="icon"]');
+  if (!fav) { fav = document.createElement('link'); fav.rel = 'icon'; fav.type = 'image/png'; head.appendChild(fav); }
+  fav.href = icon192;
+  // manifest dinâmico (Android/Chrome)
+  const nome = (state.empresa && (state.empresa.nome || state.empresa.razao)) || 'GestorPRO';
+  const manifest = {
+    name: nome + ' · Gestão',
+    short_name: nome.length > 12 ? nome.slice(0, 12) : nome,
+    description: 'Sistema de gestão de clientes, projetos, finanças e licenças.',
+    start_url: '.',
+    scope: '.',
+    display: 'standalone',
+    orientation: 'portrait-primary',
+    background_color: '#0f172a',
+    theme_color: '#0c0e14',
+    icons: [
+      { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+      { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+    ]
+  };
+  try {
+    if (_manifestBlobUrl) URL.revokeObjectURL(_manifestBlobUrl);
+    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+    _manifestBlobUrl = URL.createObjectURL(blob);
+    let mlink = document.querySelector('link[rel="manifest"]');
+    if (!mlink) { mlink = document.createElement('link'); mlink.rel = 'manifest'; head.appendChild(mlink); }
+    mlink.href = _manifestBlobUrl;
+  } catch (e) { /* manifest dinâmico indisponível */ }
+}
+
+function updateAppIcon() {
+  try {
+    const logo = state.empresa && state.empresa.logo;
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    const finish = () => {
+      const icon512 = canvas.toDataURL('image/png');
+      const c192 = document.createElement('canvas');
+      c192.width = 192; c192.height = 192;
+      c192.getContext('2d').drawImage(canvas, 0, 0, 192, 192);
+      _applyIconLinks(c192.toDataURL('image/png'), icon512);
+    };
+
+    // Fundo com o degradê da marca
+    const g = ctx.createLinearGradient(0, 0, size, size);
+    g.addColorStop(0, '#1e40af');
+    g.addColorStop(1, '#0891b2');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+
+    if (logo) {
+      const img = new Image();
+      img.onload = () => {
+        // "contain" com margem segura (~14%) para áreas mascaráveis
+        const pad = size * 0.14;
+        const maxW = size - pad * 2, maxH = size - pad * 2;
+        const r = Math.min(maxW / img.width, maxH / img.height);
+        const w = img.width * r, h = img.height * r;
+        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+        finish();
+      };
+      img.onerror = () => { _drawDefaultGlyph(ctx, size); finish(); };
+      img.src = logo;
+    } else {
+      _drawDefaultGlyph(ctx, size);
+      finish();
+    }
+  } catch (e) { /* canvas indisponível */ }
 }
 
 function removerLogo() {
@@ -8210,6 +8448,14 @@ async function init() {
   }
   updateDate();
   setInterval(updateDate, 60000);
+  // Alertas do sino: render inicial + atualização periódica (sem fechar o painel aberto)
+  if (typeof renderNotifications === 'function') {
+    renderNotifications();
+    setInterval(() => {
+      const panel = document.getElementById('notif-panel');
+      if (!panel || !panel.classList.contains('open')) renderNotifications();
+    }, 60000);
+  }
 
   // Sincronização em nuvem + PWA
   registerServiceWorker();
@@ -8278,7 +8524,8 @@ function renderAgendaCalendar() {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const prevLastDay = new Date(year, month, 0);
-  const nextDays = 7 - lastDay.getDay();
+  // Dias do próximo mês para completar a última semana (0 quando termina no sábado)
+  const nextDays = 6 - lastDay.getDay();
   
   const daysHTML = [];
   
@@ -8329,11 +8576,13 @@ function selectAgendaDate(date) {
 function previousMonth() {
   agendaState.currentDate.setMonth(agendaState.currentDate.getMonth() - 1);
   renderAgendaCalendar();
+  saveAgendaState();
 }
 
 function nextMonth() {
   agendaState.currentDate.setMonth(agendaState.currentDate.getMonth() + 1);
   renderAgendaCalendar();
+  saveAgendaState();
 }
 
 function renderAgendaEvents() {
@@ -8546,7 +8795,7 @@ function handleBgImageUpload(e) {
   reader.onload = (event) => {
     const bgImage = event.target.result;
     localStorage.setItem('gestorpro_bg_image', bgImage);
-    document.body.style.backgroundImage = `url('${bgImage}')`;
+    document.documentElement.style.setProperty('--bg-img', `url('${bgImage}')`);
     updateBgPreview();
     toast('Fundo atualizado!');
   };
@@ -8556,9 +8805,13 @@ function handleBgImageUpload(e) {
 function updateBgOpacity() {
   const opacity = parseInt(document.getElementById('bgOpacity').value);
   
-  const pseudo = document.createElement('style');
+  let pseudo = document.getElementById('bg-opacity-style');
+  if (!pseudo) {
+    pseudo = document.createElement('style');
+    pseudo.id = 'bg-opacity-style';
+    document.head.appendChild(pseudo);
+  }
   pseudo.textContent = `body::before { opacity: ${opacity / 100} !important; }`;
-  document.head.appendChild(pseudo);
   
   const valueEl = document.getElementById('opacityValue');
   if (valueEl) valueEl.textContent = opacity + '%';
@@ -8578,7 +8831,7 @@ function updateBgPreview() {
 function clearBgImage() {
   if (confirm('Remover imagem de fundo?')) {
     localStorage.removeItem('gestorpro_bg_image');
-    document.body.style.backgroundImage = 'none';
+    document.documentElement.style.removeProperty('--bg-img');
     updateBgPreview();
     toast('Fundo removido');
   }
@@ -8587,16 +8840,17 @@ function clearBgImage() {
 function initBackgroundSettings() {
   const bgImg = localStorage.getItem('gestorpro_bg_image');
   if (bgImg) {
-    document.body.style.backgroundImage = `url('${bgImg}')`;
+    document.documentElement.style.setProperty('--bg-img', `url('${bgImg}')`);
   }
   
   const bgOp = localStorage.getItem('gestorpro_bg_opacity');
-  if (bgOp) {
-    const opacityEl = document.getElementById('bgOpacity');
-    if (opacityEl) {
-      opacityEl.value = parseInt(bgOp);
-      updateBgOpacity();
-    }
+  const opacityEl = document.getElementById('bgOpacity');
+  if (bgOp !== null) {
+    if (opacityEl) opacityEl.value = parseInt(bgOp);
+    updateBgOpacity();
+  } else if (opacityEl) {
+    // Sem valor salvo: aplica o padrão visível do controle deslizante
+    updateBgOpacity();
   }
   
   updateBgPreview();
@@ -8614,6 +8868,162 @@ function changeTheme() {
     body.classList.remove('light');
     localStorage.setItem('gestorpro_theme', 'dark');
   }
+}
+
+// ─── SINO DE ALERTAS ──────────────────────────────────────
+// Monta a lista de pendências a partir dos dados do sistema:
+//  • Projetos com prazo de entrega a vencer ou vencido
+//  • Melhorias a implementar (projetos e produtos)
+//  • Licenças vencidas ou a vencer em até 2 dias
+function buildNotifications() {
+  const items = [];
+
+  // 1) Prazos de projetos (usa avaliarPrazo já existente)
+  (state.projetos || []).forEach(p => {
+    const pr = avaliarPrazo(p);
+    if (pr) {
+      items.push({
+        cat: 'prazos',
+        sev: pr.nivel === 'vencido' ? 'danger' : 'warning',
+        icon: 'ph-clock-countdown',
+        title: p.nome || 'Projeto sem nome',
+        sub: `Entrega ${fmtDate(p.dataFim)} · ${pr.texto}`,
+        sortDias: pr.dias,
+        page: 'projetos'
+      });
+    }
+  });
+
+  // 2) Melhorias pendentes (projetos e produtos)
+  const addMelhorias = (arr, page, tipoLabel) => {
+    (arr || []).forEach(p => {
+      const qtd = contarMelhoriasPendentes(p.melhorias);
+      if (qtd > 0) {
+        const urg = !!p.melhoriasUrgente;
+        items.push({
+          cat: 'melhorias',
+          sev: urg ? 'danger' : 'info',
+          icon: urg ? 'ph-warning-octagon' : 'ph-wrench',
+          title: p.nome || tipoLabel,
+          sub: `${qtd} melhoria${qtd > 1 ? 's' : ''} a implementar${urg ? ' · URGENTE' : ''} (${tipoLabel})`,
+          sortDias: urg ? -1000 : 0,
+          page
+        });
+      }
+    });
+  };
+  addMelhorias(state.projetos, 'projetos', 'Projeto');
+  addMelhorias(state.produtos, 'produtos', 'Produto');
+
+  // 3) Licenças vencidas ou a vencer em até 2 dias
+  (state.licencas || []).forEach(l => {
+    if (l.status !== 'ativa') return;
+    const dataAlerta = l.proximaCobranca || l.dataExpira;
+    if (!dataAlerta) return;
+    const dias = diasParaVencer(dataAlerta);
+    if (dias === null) return;
+    let sev = null, txt = '';
+    if (dias < 0)        { sev = 'danger';  txt = `Vencida há ${Math.abs(dias)} dia${Math.abs(dias) > 1 ? 's' : ''}`; }
+    else if (dias === 0) { sev = 'danger';  txt = 'Vence HOJE'; }
+    else if (dias <= 2)  { sev = 'warning'; txt = `Vence em ${dias} dia${dias > 1 ? 's' : ''}`; }
+    if (sev) {
+      const c = state.clientes.find(c => c.id === l.clienteId);
+      const prod = state.produtos.find(pr => pr.id === l.produtoId);
+      const nomeBase = prod ? prod.nome : 'Licença';
+      items.push({
+        cat: 'licencas',
+        sev,
+        icon: 'ph-key',
+        title: nomeBase + (c ? ' · ' + c.nome : ''),
+        sub: `${txt} · ${fmtDate(dataAlerta)}`,
+        sortDias: dias,
+        page: 'licencas'
+      });
+    }
+  });
+
+  return items;
+}
+
+function renderNotifications() {
+  const badge = document.getElementById('notif-badge');
+  const btn = document.getElementById('notif-btn');
+  const list = document.getElementById('notif-list');
+  const countLabel = document.getElementById('notif-count-label');
+  if (!badge || !list) return;
+
+  const esc = s => (s == null ? '' : String(s))
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const items = buildNotifications();
+  const total = items.length;
+
+  if (total > 0) { badge.style.display = ''; badge.textContent = total > 99 ? '99+' : total; }
+  else badge.style.display = 'none';
+  if (btn) btn.classList.toggle('has-alerts', total > 0);
+  if (countLabel) countLabel.textContent = total ? `${total} pendência${total > 1 ? 's' : ''}` : '';
+
+  if (total === 0) {
+    list.innerHTML = `<div class="notif-empty">
+      <i class="ph ph-check-circle"></i>
+      <p style="font-weight:600;color:var(--text);">Tudo em dia!</p>
+      <p style="font-size:12px;margin-top:4px;">Nenhuma pendência ou prazo no momento.</p>
+    </div>`;
+    return;
+  }
+
+  const groups = [
+    { key: 'prazos',    title: 'Prazos de Projetos' },
+    { key: 'licencas',  title: 'Licenças' },
+    { key: 'melhorias', title: 'Melhorias a Implementar' },
+  ];
+  const sevRank = { danger: 0, warning: 1, info: 2 };
+  let html = '';
+  groups.forEach(g => {
+    const gi = items.filter(it => it.cat === g.key)
+      .sort((a, b) => (sevRank[a.sev] - sevRank[b.sev]) || (a.sortDias - b.sortDias));
+    if (!gi.length) return;
+    html += `<div class="notif-group-title">${g.title} (${gi.length})</div>`;
+    html += gi.map(it => `
+      <div class="notif-item sev-${it.sev}" onclick="notifGoto('${it.page}')">
+        <div class="notif-item-icon"><i class="ph ${it.icon}"></i></div>
+        <div class="notif-item-body">
+          <div class="notif-item-title">${esc(it.title)}</div>
+          <div class="notif-item-sub">${esc(it.sub)}</div>
+        </div>
+      </div>`).join('');
+  });
+  list.innerHTML = html;
+}
+
+function toggleNotifPanel(e) {
+  if (e) e.stopPropagation();
+  const panel = document.getElementById('notif-panel');
+  if (!panel) return;
+  const willOpen = !panel.classList.contains('open');
+  panel.classList.toggle('open', willOpen);
+  if (willOpen) {
+    renderNotifications();
+    setTimeout(() => document.addEventListener('click', _closeNotifOnOutside), 0);
+  } else {
+    document.removeEventListener('click', _closeNotifOnOutside);
+  }
+}
+
+function _closeNotifOnOutside(e) {
+  const wrap = document.querySelector('.notif-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    const panel = document.getElementById('notif-panel');
+    if (panel) panel.classList.remove('open');
+    document.removeEventListener('click', _closeNotifOnOutside);
+  }
+}
+
+function notifGoto(page) {
+  const panel = document.getElementById('notif-panel');
+  if (panel) panel.classList.remove('open');
+  document.removeEventListener('click', _closeNotifOnOutside);
+  showPage(page);
 }
 
 init();
