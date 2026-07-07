@@ -2598,6 +2598,25 @@ tbody tr:last-child td { border-bottom: none; }
   border-color: var(--success);
 }
 
+.event-item.receber {
+  border-left-color: var(--success);
+}
+.event-item.receber:hover {
+  box-shadow: 0 4px 12px rgba(5,150,105,0.2);
+  border-color: var(--success);
+}
+.event-item.pagar {
+  border-left-color: var(--danger);
+}
+.event-item.pagar:hover {
+  box-shadow: 0 4px 12px rgba(220,38,38,0.2);
+  border-color: var(--danger);
+}
+.event-item.atrasado {
+  border-left-color: var(--danger) !important;
+  background: rgba(220,38,38,0.06);
+}
+
 .event-item-header {
   display: flex;
   justify-content: space-between;
@@ -2641,6 +2660,43 @@ tbody tr:last-child td { border-bottom: none; }
   background: rgba(5,150,105,0.2);
   color: var(--success);
 }
+
+.event-item.receber .event-item-badge {
+  background: rgba(5,150,105,0.2);
+  color: var(--success);
+}
+.event-item.pagar .event-item-badge {
+  background: rgba(220,38,38,0.2);
+  color: var(--danger);
+}
+
+/* ─── CARD DE PENDÊNCIAS FINANCEIRAS ────────────────── */
+.fin-pend-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--danger);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 8px;
+}
+.fin-pend-card:last-child { margin-bottom: 0; }
+.fin-pend-card.a-vencer { border-left-color: var(--warning); }
+.fin-pend-card-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 16px;
+  background: var(--danger-dim); color: var(--danger);
+}
+.fin-pend-card.a-vencer .fin-pend-card-icon { background: var(--warning-dim); color: var(--warning); }
+.fin-pend-card-info { flex: 1; min-width: 160px; }
+.fin-pend-card-desc { font-size: 14px; font-weight: 700; }
+.fin-pend-card-detalhe { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.fin-pend-card-valor { font-family: var(--font-mono); font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.fin-pend-card-prazo { font-size: 12px; font-weight: 700; color: var(--danger); flex-shrink: 0; white-space: nowrap; }
+.fin-pend-card.a-vencer .fin-pend-card-prazo { color: var(--warning); }
 
 .event-item-desc {
   font-size: 12px;
@@ -3415,17 +3471,29 @@ tbody tr:last-child td { border-bottom: none; }
           </div>
         </div>
 
+        <div id="card-fin-pendencias" style="display:none;margin-bottom:20px;">
+          <div class="card" style="border-color:rgba(220,38,38,0.4);background:linear-gradient(135deg,var(--bg-card) 0%,rgba(220,38,38,0.04) 100%);">
+            <div class="card-header" style="margin-bottom:14px;">
+              <span class="card-title" style="display:flex;align-items:center;gap:8px;">
+                <i class="ph ph-warning-octagon" style="color:var(--danger);font-size:18px;"></i>
+                <span id="fin-pend-title">Pendências Financeiras</span>
+              </span>
+            </div>
+            <div id="lista-fin-pendencias"></div>
+          </div>
+        </div>
+
         <div class="card">
           <div class="card-header">
             <span class="card-title">Histórico de Lançamentos</span>
             <div class="search-input-wrap" style="max-width:250px;">
               <i class="ph ph-magnifying-glass"></i>
-              <input type="text" placeholder="Buscar..." oninput="filterTable('tb-financeiro', this.value, [0,2])">
+              <input type="text" placeholder="Buscar..." oninput="filterTable('tb-financeiro', this.value, [0,3])">
             </div>
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Descrição</th><th>Tipo</th><th>Projeto</th><th>Data</th><th>Valor</th><th></th></tr></thead>
+              <thead><tr><th>Descrição</th><th>Tipo</th><th>Status</th><th>Projeto</th><th>Data</th><th>Valor</th><th></th></tr></thead>
               <tbody id="tb-financeiro"></tbody>
             </table>
           </div>
@@ -4367,12 +4435,23 @@ tbody tr:last-child td { border-bottom: none; }
         </select>
       </div>
       <div class="form-group">
-        <label>Data *</label>
+        <label id="fin-data-label">Data *</label>
         <input type="date" id="fin-data" required>
       </div>
       <div class="form-group">
+        <label>Status</label>
+        <select id="fin-status">
+          <option value="pago">Pago / Recebido</option>
+          <option value="pendente">Pendente (a receber/pagar)</option>
+        </select>
+      </div>
+      <div class="form-group full">
         <label>Projeto (opcional)</label>
         <select id="fin-projeto"><option value="">Nenhum</option></select>
+      </div>
+      <div class="form-group full" style="background:var(--primary-dim);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--text-secondary);display:flex;gap:8px;align-items:flex-start;">
+        <i class="ph ph-calendar-check" style="font-size:16px;color:var(--primary-light);flex-shrink:0;margin-top:1px;"></i>
+        <span>Lançamentos <strong>pendentes</strong> são adicionados automaticamente à Agenda na data informada e, se vencerem sem pagamento, geram um alerta de atraso no sino de notificações e no Financeiro.</span>
       </div>
       <div class="form-footer">
         <button type="button" class="btn btn-secondary" onclick="closeModal('financial')">Cancelar</button>
@@ -4727,7 +4806,7 @@ tbody tr:last-child td { border-bottom: none; }
     </div>
 
     <div class="modal-footer">
-      <button type="button" class="btn btn-danger" onclick="deleteAgendaEvent()" style="margin-right: auto;">
+      <button type="button" id="agenda-details-delete-btn" class="btn btn-danger" onclick="deleteAgendaEvent()" style="margin-right: auto;">
         <i class="ph ph-trash"></i> Deletar
       </button>
       <button type="button" class="btn btn-ghost" onclick="closeAgendaDetailsModal()">Fechar</button>
@@ -5333,6 +5412,8 @@ function saveProject(e) {
   saveState();
   closeModal('project');
   renderProjetos();
+  syncAutoAgendaEvents();
+  if (typeof renderNotifications === 'function') renderNotifications();
   toast(id ? 'Projeto atualizado!' : 'Projeto criado!');
 }
 
@@ -5406,6 +5487,8 @@ function deleteProject(id) {
   state.financeiro = state.financeiro.filter(f => f.projetoId !== id);
   saveState();
   renderProjetos();
+  syncAutoAgendaEvents();
+  if (typeof renderNotifications === 'function') renderNotifications();
   toast('Projeto removido.', 'error');
 }
 
@@ -5815,6 +5898,7 @@ function saveFinancial(e) {
     valor: parseFloat(document.getElementById('fin-valor').value) || 0,
     tipo: document.getElementById('fin-tipo').value,
     data: document.getElementById('fin-data').value,
+    status: document.getElementById('fin-status').value || 'pago',
     projetoId: document.getElementById('fin-projeto').value || null,
   };
   if (id) {
@@ -5826,6 +5910,8 @@ function saveFinancial(e) {
   saveState();
   closeModal('financial');
   renderFin(document.getElementById('fin-period').value);
+  syncAutoAgendaEvents();
+  if (typeof renderNotifications === 'function') renderNotifications();
   toast(id ? 'Lançamento atualizado!' : 'Lançamento adicionado!');
 }
 
@@ -5868,10 +5954,12 @@ function renderFin(period = 'esteMes') {
   const list = [...state.financeiro].sort((a, b) => b.data.localeCompare(a.data));
   list.forEach(t => {
     const proj = state.projetos.find(p => p.id === t.projetoId);
+    const stInfo = finStatusInfo(t);
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${t.desc}</td>
       <td><span class="badge ${t.tipo === 'receita' ? 'badge-income' : 'badge-expense'}">${t.tipo === 'receita' ? 'Receita' : 'Despesa'}</span></td>
+      <td><span class="badge" style="background:${stInfo.bg};color:${stInfo.color};">${stInfo.label}</span></td>
       <td>${proj ? proj.nome : '—'}</td>
       <td style="font-family:var(--font-mono);font-size:12px;">${fmtDate(t.data)}</td>
       <td style="font-family:var(--font-mono);font-weight:700;color:${t.tipo === 'receita' ? 'var(--success)' : 'var(--danger)'};">${fmt(t.valor)}</td>
@@ -5883,6 +5971,73 @@ function renderFin(period = 'esteMes') {
       </td>`;
     tb.appendChild(tr);
   });
+
+  renderFinPendencias();
+}
+
+// Retorna infos de exibição (rótulo/cor) do status de um lançamento financeiro
+function finStatusInfo(t) {
+  if (t.status !== 'pendente') {
+    return { key: 'pago', label: t.tipo === 'receita' ? 'Recebido' : 'Pago', bg: 'var(--success-dim)', color: 'var(--success)' };
+  }
+  const hoje = formatAgendaDate(new Date());
+  if (t.data < hoje) {
+    return { key: 'atrasado', label: 'Atrasado', bg: 'var(--danger-dim)', color: 'var(--danger)' };
+  }
+  return { key: 'pendente', label: 'Pendente', bg: 'var(--warning-dim)', color: 'var(--warning)' };
+}
+
+// Monta o card de pendências financeiras exibido ao abrir o Financeiro:
+// lançamentos pendentes já vencidos (atrasados) e os que vencem nos próximos dias.
+function renderFinPendencias() {
+  const card = document.getElementById('card-fin-pendencias');
+  const lista = document.getElementById('lista-fin-pendencias');
+  const titleEl = document.getElementById('fin-pend-title');
+  if (!card || !lista) return;
+
+  const hoje = formatAgendaDate(new Date());
+  const emBreveLimite = new Date();
+  emBreveLimite.setDate(emBreveLimite.getDate() + 5);
+  const emBreveStr = formatAgendaDate(emBreveLimite);
+
+  const pendentes = (state.financeiro || []).filter(t => t.status === 'pendente' && t.data);
+  const atrasados = pendentes.filter(t => t.data < hoje).sort((a, b) => a.data.localeCompare(b.data));
+  const aVencer = pendentes.filter(t => t.data >= hoje && t.data <= emBreveStr).sort((a, b) => a.data.localeCompare(b.data));
+
+  const total = atrasados.length + aVencer.length;
+  if (!total) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  const valorAtrasado = atrasados.reduce((a, t) => a + t.valor, 0);
+  if (titleEl) {
+    titleEl.textContent = atrasados.length
+      ? `${atrasados.length} pendência${atrasados.length > 1 ? 's' : ''} em atraso · ${fmt(valorAtrasado)}`
+      : `${aVencer.length} pendência${aVencer.length > 1 ? 's' : ''} a vencer em breve`;
+  }
+
+  const cardHTML = (t, atrasado) => {
+    const proj = state.projetos.find(p => p.id === t.projetoId);
+    const dias = Math.round((new Date(t.data + 'T00:00:00') - new Date(hoje + 'T00:00:00')) / 86400000);
+    const prazoTxt = atrasado
+      ? `Venceu há ${Math.abs(dias)} dia${Math.abs(dias) > 1 ? 's' : ''}`
+      : (dias === 0 ? 'Vence HOJE' : `Vence em ${dias} dia${dias > 1 ? 's' : ''}`);
+    const tipoLabel = t.tipo === 'receita' ? 'A Receber' : 'A Pagar';
+    return `<div class="fin-pend-card ${atrasado ? '' : 'a-vencer'}">
+      <div class="fin-pend-card-icon"><i class="ph ${atrasado ? 'ph-warning-octagon' : 'ph-hourglass-medium'}"></i></div>
+      <div class="fin-pend-card-info">
+        <div class="fin-pend-card-desc">${t.desc || tipoLabel}</div>
+        <div class="fin-pend-card-detalhe">${tipoLabel}${proj ? ' · ' + proj.nome : ''} · Venc.: ${fmtDate(t.data)}</div>
+      </div>
+      <div class="fin-pend-card-valor" style="color:${t.tipo === 'receita' ? 'var(--success)' : 'var(--danger)'};">${fmt(t.valor)}</div>
+      <div class="fin-pend-card-prazo">${prazoTxt}</div>
+      <button class="act-btn act-edit" onclick="editFin('${t.id}')" title="Abrir lançamento"><i class="ph ph-pencil-simple"></i></button>
+    </div>`;
+  };
+
+  let html = '';
+  if (atrasados.length) html += atrasados.map(t => cardHTML(t, true)).join('');
+  if (aVencer.length) html += aVencer.map(t => cardHTML(t, false)).join('');
+  lista.innerHTML = html;
 }
 
 function editFin(id) {
@@ -5893,6 +6048,7 @@ function editFin(id) {
   document.getElementById('fin-valor').value = t.valor;
   document.getElementById('fin-tipo').value = t.tipo;
   document.getElementById('fin-data').value = t.data;
+  document.getElementById('fin-status').value = t.status || 'pago';
   document.getElementById('modal-fin-title').textContent = 'Editar Lançamento';
   populateProjDropdown('fin-projeto', '');
   openModal('financial');
@@ -5904,6 +6060,8 @@ function deleteFin(id) {
   state.financeiro = state.financeiro.filter(f => f.id !== id);
   saveState();
   renderFin(document.getElementById('fin-period').value);
+  syncAutoAgendaEvents();
+  if (typeof renderNotifications === 'function') renderNotifications();
   toast('Lançamento removido.', 'error');
 }
 
@@ -7874,6 +8032,8 @@ function renderAll() {
   renderFerramentas();
   populateClientDropdown('doc-cliente');
   loadConfigForm();
+  syncAutoAgendaEvents();
+  if (typeof renderNotifications === 'function') renderNotifications();
   // Init FAB for current page
   const activePage = document.querySelector('.page.active');
   if (activePage) {
@@ -8482,13 +8642,92 @@ let agendaState = {
 const eventTypes = {
   commitment: { label: 'Compromisso', color: '#0891b2' },
   task: { label: 'Tarefa', color: '#059669' },
-  project: { label: 'Projeto', color: '#ea580c' }
+  project: { label: 'Projeto', color: '#ea580c' },
+  receber: { label: 'A Receber', color: '#059669' },
+  pagar: { label: 'A Pagar', color: '#dc2626' }
 };
 
 function initAgenda() {
   loadAgendaState();
-  renderAgendaCalendar();
-  renderAgendaEvents();
+  syncAutoAgendaEvents();
+}
+
+// ─── SINCRONIZAÇÃO AUTOMÁTICA DA AGENDA ────────────────────
+// Toda atividade financeira (lançamentos pendentes) e datas de
+// projetos (início/entrega) são espelhadas automaticamente na
+// Agenda, sem precisar cadastrar o evento manualmente.
+function syncAutoAgendaEvents() {
+  if (!agendaState || !Array.isArray(agendaState.events)) return;
+  if (typeof state === 'undefined' || !state) return;
+
+  // Remove os eventos gerados automaticamente antes (serão recriados do zero)
+  agendaState.events = agendaState.events.filter(e => !e.auto);
+
+  const hoje = formatAgendaDate(new Date());
+  const novos = [];
+
+  // 1) Financeiro: apenas lançamentos PENDENTES viram evento (a receber/a pagar)
+  (state.financeiro || []).forEach(t => {
+    if (!t || t.status !== 'pendente' || !t.data) return;
+    const proj = state.projetos.find(p => p.id === t.projetoId);
+    const atrasado = t.data < hoje;
+    const rotulo = t.tipo === 'receita' ? 'Receber' : 'Pagar';
+    novos.push({
+      id: 'auto-fin-' + t.id,
+      auto: true,
+      refType: 'financeiro',
+      refId: t.id,
+      title: `${atrasado ? '⚠️ ' : ''}${rotulo}: ${t.desc || (t.tipo === 'receita' ? 'Receita' : 'Despesa')}`,
+      description: (proj ? `Projeto: ${proj.nome}. ` : '') + `Valor: ${fmt(t.valor)}` + (atrasado ? ' — EM ATRASO' : ''),
+      date: t.data,
+      time: '09:00',
+      type: t.tipo === 'receita' ? 'receber' : 'pagar',
+      createdAt: new Date().toISOString()
+    });
+  });
+
+  // 2) Projetos: datas de início e de entrega
+  (state.projetos || []).forEach(p => {
+    if (!p) return;
+    if (p.dataInicio) {
+      novos.push({
+        id: 'auto-proj-ini-' + p.id,
+        auto: true,
+        refType: 'projeto',
+        refId: p.id,
+        title: `🚀 Início: ${p.nome || 'Projeto'}`,
+        description: p.fase ? `Fase: ${p.fase}` : '',
+        date: p.dataInicio,
+        time: '09:00',
+        type: 'project',
+        createdAt: new Date().toISOString()
+      });
+    }
+    if (p.dataFim) {
+      const atrasado = p.dataFim < hoje && p.status !== 'concluido';
+      novos.push({
+        id: 'auto-proj-fim-' + p.id,
+        auto: true,
+        refType: 'projeto',
+        refId: p.id,
+        title: `${atrasado ? '⚠️ ' : '🏁 '}Entrega: ${p.nome || 'Projeto'}`,
+        description: (p.fase ? `Fase: ${p.fase}` : '') + (atrasado ? ' — PRAZO VENCIDO' : ''),
+        date: p.dataFim,
+        time: '18:00',
+        type: 'project',
+        createdAt: new Date().toISOString()
+      });
+    }
+  });
+
+  agendaState.events = agendaState.events.concat(novos);
+  saveAgendaState();
+
+  // Re-renderiza a agenda se ela estiver na tela
+  if (document.getElementById('calendar-days')) {
+    renderAgendaCalendar();
+    renderAgendaEvents();
+  }
 }
 
 function loadAgendaState() {
@@ -8726,9 +8965,24 @@ function showAgendaEventDetails(id) {
         </div>
       </div>
       ` : ''}
+
+      ${event.auto ? `
+      <div class="agenda-form-group">
+        <div style="padding: 10px 12px; background: var(--primary-dim); border-radius: var(--radius-sm); font-size: 12px; color: var(--text-secondary); display:flex; gap:8px; align-items:flex-start;">
+          <i class="ph ph-link-simple" style="color:var(--primary-light); flex-shrink:0; margin-top:1px;"></i>
+          <span>Evento gerado automaticamente a partir do ${event.refType === 'financeiro' ? 'Financeiro' : 'cadastro de Projetos'}. Para alterá-lo ou removê-lo, edite o registro de origem.</span>
+        </div>
+        <button type="button" class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="closeAgendaDetailsModal(); showPage('${event.refType === 'financeiro' ? 'financeiro' : 'projetos'}');">
+          <i class="ph ph-arrow-square-out"></i> Abrir ${event.refType === 'financeiro' ? 'Financeiro' : 'Projetos'}
+        </button>
+      </div>
+      ` : ''}
     `;
   }
-  
+
+  const delBtn = document.getElementById('agenda-details-delete-btn');
+  if (delBtn) delBtn.style.display = event.auto ? 'none' : '';
+
   const modal = document.getElementById('modal-agenda-details');
   if (modal) modal.classList.add('active');
 }
@@ -8741,7 +8995,12 @@ function closeAgendaDetailsModal() {
 
 function deleteAgendaEvent() {
   if (!agendaState.currentEventId) return;
-  
+  const event = agendaState.events.find(e => e.id === agendaState.currentEventId);
+  if (event && event.auto) {
+    toast('Este evento é automático. Edite o registro de origem no Financeiro ou Projetos.', 'error');
+    return;
+  }
+
   if (confirm('Deseja realmente deletar este evento?')) {
     agendaState.events = agendaState.events.filter(e => e.id !== agendaState.currentEventId);
     saveAgendaState();
@@ -8915,7 +9174,31 @@ function buildNotifications() {
   addMelhorias(state.projetos, 'projetos', 'Projeto');
   addMelhorias(state.produtos, 'produtos', 'Produto');
 
-  // 3) Licenças vencidas ou a vencer em até 2 dias
+  // 3) Financeiro: recebimentos e pagamentos pendentes, com destaque para atrasados
+  (state.financeiro || []).forEach(t => {
+    if (!t || t.status !== 'pendente' || !t.data) return;
+    const dias = diasParaVencer(t.data);
+    if (dias === null) return;
+    const proj = state.projetos.find(p => p.id === t.projetoId);
+    const rotulo = t.tipo === 'receita' ? 'Receber' : 'Pagar';
+    let sev = null, txt = '';
+    if (dias < 0)        { sev = 'danger';  txt = `Atrasado há ${Math.abs(dias)} dia${Math.abs(dias) > 1 ? 's' : ''}`; }
+    else if (dias === 0) { sev = 'danger';  txt = 'Vence HOJE'; }
+    else if (dias <= 3)  { sev = 'warning'; txt = `Vence em ${dias} dia${dias > 1 ? 's' : ''}`; }
+    if (sev) {
+      items.push({
+        cat: 'financeiro',
+        sev,
+        icon: t.tipo === 'receita' ? 'ph-hand-coins' : 'ph-money',
+        title: `${rotulo}: ${t.desc || (t.tipo === 'receita' ? 'Receita' : 'Despesa')}`,
+        sub: `${fmt(t.valor)} · ${txt}${proj ? ' · ' + proj.nome : ''}`,
+        sortDias: dias,
+        page: 'financeiro'
+      });
+    }
+  });
+
+  // 4) Licenças vencidas ou a vencer em até 2 dias
   (state.licencas || []).forEach(l => {
     if (l.status !== 'ativa') return;
     const dataAlerta = l.proximaCobranca || l.dataExpira;
@@ -8973,9 +9256,10 @@ function renderNotifications() {
   }
 
   const groups = [
-    { key: 'prazos',    title: 'Prazos de Projetos' },
-    { key: 'licencas',  title: 'Licenças' },
-    { key: 'melhorias', title: 'Melhorias a Implementar' },
+    { key: 'prazos',     title: 'Prazos de Projetos' },
+    { key: 'financeiro', title: 'Financeiro (Recebimentos/Pagamentos)' },
+    { key: 'licencas',   title: 'Licenças' },
+    { key: 'melhorias',  title: 'Melhorias a Implementar' },
   ];
   const sevRank = { danger: 0, warning: 1, info: 2 };
   let html = '';
